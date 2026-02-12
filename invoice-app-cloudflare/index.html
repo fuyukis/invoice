@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>請求書・納品書作成アプリ - Cloudflare版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            #preview-section { 
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+        }
+        
+        .print-document {
+            font-family: 'Helvetica', 'Arial', 'Hiragino Sans', 'Meiryo', sans-serif;
+        }
+        
+        .print-document table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        
+        .print-document th,
+        .print-document td {
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: left;
+            font-size: 9px;
+        }
+        
+        .print-document th {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="max-w-md mx-auto mt-20 bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-center mb-6">請求書管理システム</h1>
+        <p class="text-gray-600 text-center mb-6">Cloudflare版 - サーバーレスアプリ</p>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-semibold mb-2">メールアドレス</label>
+            <input type="email" id="loginEmail" placeholder="your@email.com" class="w-full p-3 border rounded">
+        </div>
+        
+        <div class="mb-6">
+            <label class="block text-sm font-semibold mb-2">パスワード</label>
+            <input type="password" id="loginPassword" placeholder="パスワード" class="w-full p-3 border rounded">
+        </div>
+        
+        <button onclick="handleLogin()" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold mb-3">
+            ログイン
+        </button>
+        
+        <button onclick="showRegister()" class="w-full bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 font-semibold">
+            新規登録
+        </button>
+        
+        <div class="mt-6 p-4 bg-blue-50 rounded text-sm">
+            <p class="font-semibold mb-2">デモアカウント:</p>
+            <p>Email: demo@example.com</p>
+            <p>Password: demo123</p>
+        </div>
+    </div>
+
+    <!-- Register Screen -->
+    <div id="registerScreen" style="display: none;" class="max-w-md mx-auto mt-20 bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-center mb-6">新規登録</h1>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-semibold mb-2">会社名</label>
+            <input type="text" id="registerCompany" placeholder="会社名" class="w-full p-3 border rounded">
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-semibold mb-2">メールアドレス</label>
+            <input type="email" id="registerEmail" placeholder="your@email.com" class="w-full p-3 border rounded">
+        </div>
+        
+        <div class="mb-6">
+            <label class="block text-sm font-semibold mb-2">パスワード</label>
+            <input type="password" id="registerPassword" placeholder="パスワード（6文字以上）" class="w-full p-3 border rounded">
+        </div>
+        
+        <button onclick="handleRegister()" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold mb-3">
+            登録
+        </button>
+        
+        <button onclick="showLogin()" class="w-full bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 font-semibold">
+            ログイン画面に戻る
+        </button>
+    </div>
+
+    <!-- Main App (hidden until logged in) -->
+    <div id="mainApp" style="display: none;">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-8 no-print flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-800 mb-2">請求書・納品書作成</h1>
+                    <p class="text-gray-600">クラウド版 - データはサーバーに保存されます</p>
+                    <p class="text-sm text-gray-500" id="userInfo"></p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="newInvoice()" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        新規作成
+                    </button>
+                    <button onclick="handleLogout()" class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600">
+                        ログアウト
+                    </button>
+                </div>
+            </div>
+
+            <!-- Same invoice form as before -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left column - Form (same as before, keeping it concise here) -->
+                <div class="bg-white rounded-lg shadow-lg p-6 no-print" id="invoiceForm">
+                    <h2 class="text-xl font-bold mb-4">文書情報入力</h2>
+                    <p class="text-sm text-gray-600 mb-4">※ このバージョンはデモです。実際のサーバー機能は別途実装が必要です。</p>
+                    <!-- Form fields would go here - using the same structure as the original app -->
+                </div>
+
+                <!-- Right column - Preview -->
+                <div class="bg-white rounded-lg shadow-lg p-6" id="preview-section">
+                    <h2 class="text-xl font-bold mb-4 no-print">プレビュー</h2>
+                    <div id="invoicePreview" class="border p-8 bg-white print-document" style="min-height: 800px;">
+                        <p class="text-gray-500 text-center">プレビューがここに表示されます</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple authentication state management
+        let currentUser = null;
+        
+        function showLogin() {
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('registerScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+        
+        function showRegister() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('registerScreen').style.display = 'block';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+        
+        function showMainApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('registerScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            
+            if (currentUser) {
+                document.getElementById('userInfo').textContent = `ログイン中: ${currentUser.email}`;
+            }
+        }
+        
+        // Demo login (in production, this would call Cloudflare Workers API)
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                alert('メールアドレスとパスワードを入力してください');
+                return;
+            }
+            
+            // Demo authentication (replace with real API call)
+            if (email === 'demo@example.com' && password === 'demo123') {
+                currentUser = { email: email, id: 'demo-user' };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showMainApp();
+                initializeApp();
+            } else {
+                // In production, call API
+                alert('このデモでは demo@example.com / demo123 を使用してください\n\n実際のサーバー版では、ここでCloudflare Workers APIを呼び出します。');
+            }
+        }
+        
+        function handleRegister() {
+            const company = document.getElementById('registerCompany').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            if (!company || !email || !password) {
+                alert('すべての項目を入力してください');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('パスワードは6文字以上で設定してください');
+                return;
+            }
+            
+            // In production, this would call Cloudflare Workers API
+            alert('実際のサーバー版では、ここでアカウントが作成されます。\n\nデモではログイン画面に戻ってください。');
+            showLogin();
+        }
+        
+        function handleLogout() {
+            if (confirm('ログアウトしますか？')) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                showLogin();
+            }
+        }
+        
+        function newInvoice() {
+            alert('新規作成機能（実装中）');
+        }
+        
+        function initializeApp() {
+            // Initialize the invoice app
+            alert('アプリを初期化しました。実際のサーバー版では、ここでユーザーの請求書データを読み込みます。');
+        }
+        
+        // Check if user is already logged in
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+                initializeApp();
+            } else {
+                showLogin();
+            }
+        });
+    </script>
+</body>
+</html>
