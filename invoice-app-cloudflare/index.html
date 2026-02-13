@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>請求書・納品書作成アプリ - Cloudflare版</title>
+    <title>請求書・納品書作成アプリ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media print {
@@ -38,202 +38,792 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
-    <!-- Login Screen -->
-    <div id="loginScreen" class="max-w-md mx-auto mt-20 bg-white rounded-lg shadow-lg p-8">
-        <h1 class="text-3xl font-bold text-center mb-6">請求書管理システム</h1>
-        <p class="text-gray-600 text-center mb-6">Cloudflare版 - サーバーレスアプリ</p>
-        
-        <div class="mb-4">
-            <label class="block text-sm font-semibold mb-2">メールアドレス</label>
-            <input type="email" id="loginEmail" placeholder="your@email.com" class="w-full p-3 border rounded">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-8 no-print">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">請求書・納品書作成</h1>
+            <p class="text-gray-600">ビジネス文書を簡単に作成</p>
+            <button onclick="newInvoice()" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2 mx-auto">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                新規作成
+            </button>
         </div>
-        
-        <div class="mb-6">
-            <label class="block text-sm font-semibold mb-2">パスワード</label>
-            <input type="password" id="loginPassword" placeholder="パスワード" class="w-full p-3 border rounded">
-        </div>
-        
-        <button onclick="handleLogin()" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold mb-3">
-            ログイン
-        </button>
-        
-        <button onclick="showRegister()" class="w-full bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 font-semibold">
-            新規登録
-        </button>
-        
-        <div class="mt-6 p-4 bg-blue-50 rounded text-sm">
-            <p class="font-semibold mb-2">デモアカウント:</p>
-            <p>Email: demo@example.com</p>
-            <p>Password: demo123</p>
-        </div>
-    </div>
 
-    <!-- Register Screen -->
-    <div id="registerScreen" style="display: none;" class="max-w-md mx-auto mt-20 bg-white rounded-lg shadow-lg p-8">
-        <h1 class="text-3xl font-bold text-center mb-6">新規登録</h1>
-        
-        <div class="mb-4">
-            <label class="block text-sm font-semibold mb-2">会社名</label>
-            <input type="text" id="registerCompany" placeholder="会社名" class="w-full p-3 border rounded">
-        </div>
-        
-        <div class="mb-4">
-            <label class="block text-sm font-semibold mb-2">メールアドレス</label>
-            <input type="email" id="registerEmail" placeholder="your@email.com" class="w-full p-3 border rounded">
-        </div>
-        
-        <div class="mb-6">
-            <label class="block text-sm font-semibold mb-2">パスワード</label>
-            <input type="password" id="registerPassword" placeholder="パスワード（6文字以上）" class="w-full p-3 border rounded">
-        </div>
-        
-        <button onclick="handleRegister()" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold mb-3">
-            登録
-        </button>
-        
-        <button onclick="showLogin()" class="w-full bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 font-semibold">
-            ログイン画面に戻る
-        </button>
-    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Input Form -->
+            <div class="bg-white rounded-lg shadow-lg p-6 no-print">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    文書情報入力
+                </h2>
 
-    <!-- Main App (hidden until logged in) -->
-    <div id="mainApp" style="display: none;">
-        <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-8 no-print flex justify-between items-center">
-                <div>
-                    <h1 class="text-4xl font-bold text-gray-800 mb-2">請求書・納品書作成</h1>
-                    <p class="text-gray-600">クラウド版 - データはサーバーに保存されます</p>
-                    <p class="text-sm text-gray-500" id="userInfo"></p>
+                <!-- Document Type -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-2">文書種類</label>
+                    <div class="flex gap-4 mb-3">
+                        <label class="flex items-center">
+                            <input
+                                type="radio"
+                                value="invoice"
+                                checked
+                                onchange="updateDocType(this.value)"
+                                name="docType"
+                                class="mr-2"
+                            />
+                            請求書
+                        </label>
+                        <label class="flex items-center">
+                            <input
+                                type="radio"
+                                value="delivery"
+                                onchange="updateDocType(this.value)"
+                                name="docType"
+                                class="mr-2"
+                            />
+                            納品書
+                        </label>
+                    </div>
+                    <label class="block text-sm font-semibold mb-2 mt-4">言語</label>
+                    <div class="flex gap-4 mb-3">
+                        <label class="flex items-center">
+                            <input
+                                type="radio"
+                                value="ja"
+                                checked
+                                onchange="updateLanguage(this.value)"
+                                name="language"
+                                class="mr-2"
+                            />
+                            日本語（国内）
+                        </label>
+                        <label class="flex items-center">
+                            <input
+                                type="radio"
+                                value="en"
+                                onchange="updateLanguage(this.value)"
+                                name="language"
+                                class="mr-2"
+                            />
+                            English（海外）
+                        </label>
+                    </div>
+                    <div id="currencySection" style="display: none;">
+                        <label class="block text-sm font-semibold mb-2 mt-4">通貨 (Currency)</label>
+                        <select id="currencySelect" onchange="updateCurrency()" class="w-full p-2 border rounded mb-2">
+                            <option value="JPY">JPY - 日本円</option>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="AUD">AUD - Australian Dollar</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                            <option value="SGD">SGD - Singapore Dollar</option>
+                            <option value="TWD">TWD - Taiwan Dollar</option>
+                            <option value="MYR">MYR - Malaysian Ringgit</option>
+                            <option value="CNY">CNY - Chinese Yuan</option>
+                            <option value="KRW">KRW - Korean Won</option>
+                            <option value="THB">THB - Thai Baht</option>
+                        </select>
+                        <div id="exchangeRateInfo" class="text-xs text-gray-600 mb-2"></div>
+                        <button onclick="fetchExchangeRate()" class="text-xs bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">
+                            最新レートを取得
+                        </button>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="newInvoice()" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2">
+
+                <!-- Company Info (Fixed) -->
+                <div class="mb-6 p-4 bg-blue-50 rounded">
+                    <h3 class="font-semibold mb-3">発行者情報（固定）</h3>
+                    <div class="text-sm space-y-1 text-gray-700">
+                        <p><strong>合同会社Snowisland9</strong></p>
+                        <p>〒155-0032</p>
+                        <p>東京都世田谷区代沢1-5-9</p>
+                        <p class="mt-3"><strong>登録番号:</strong> T9010903006381</p>
+                    </div>
+                </div>
+
+                <!-- Bank Info (Fixed) -->
+                <div class="mb-6 p-4 bg-purple-50 rounded">
+                    <h3 class="font-semibold mb-3">振込先情報</h3>
+                    <div class="text-sm space-y-1 text-gray-700">
+                        <p><strong>住信SBIネット銀行</strong></p>
+                        <p>法人第一支店（106）</p>
+                        <p>普通 1608149</p>
+                        <p>ド）スノーアイランドナイン</p>
+                    </div>
+                    <div class="mt-4" id="paypalOption" style="display: none;">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="includePaypal" onchange="updatePreview()" class="mr-2">
+                            <span class="text-sm">PayPal情報を追加</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Client Info -->
+                <div class="mb-6 p-4 bg-green-50 rounded">
+                    <h3 class="font-semibold mb-3">宛先情報</h3>
+                    <input type="text" id="clientName" placeholder="宛先（会社名・氏名）" oninput="updatePreview()" class="w-full p-2 border rounded mb-2">
+                    <input type="text" id="clientPostal" placeholder="郵便番号" oninput="updatePreview()" class="w-full p-2 border rounded mb-2">
+                    <input type="text" id="clientAddress" placeholder="住所" oninput="updatePreview()" class="w-full p-2 border rounded">
+                </div>
+
+                <!-- Document Details -->
+                <div class="mb-6 p-4 bg-yellow-50 rounded">
+                    <h3 class="font-semibold mb-3">文書詳細</h3>
+                    <input type="text" id="docNumber" placeholder="文書番号（例：2024-001）" oninput="updatePreview()" class="w-full p-2 border rounded mb-2">
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div>
+                            <label class="block text-xs mb-1">発行日</label>
+                            <input type="date" id="issueDate" oninput="updatePreview()" class="w-full p-2 border rounded">
+                        </div>
+                        <div id="dueDateContainer">
+                            <label class="block text-xs mb-1">支払期限</label>
+                            <input type="date" id="dueDate" oninput="updatePreview()" class="w-full p-2 border rounded">
+                        </div>
+                    </div>
+                    <input type="text" id="subject" placeholder="件名" oninput="updatePreview()" class="w-full p-2 border rounded">
+                </div>
+
+                <!-- Items -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-semibold">明細</h3>
+                        <button onclick="addItem()" class="flex items-center gap-1 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            追加
+                        </button>
+                    </div>
+                    <div id="itemsContainer"></div>
+                </div>
+
+                <!-- Summary -->
+                <div class="border-t pt-4">
+                    <div class="flex justify-between mb-2">
+                        <span>小計</span>
+                        <span class="font-semibold" id="subtotalDisplay">¥0</span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span>消費税（10%）</span>
+                        <span class="font-semibold" id="taxDisplay">¥0</span>
+                    </div>
+                    <div class="flex justify-between text-lg font-bold border-t pt-2">
+                        <span>合計金額</span>
+                        <span class="text-blue-600" id="totalDisplay">¥0</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mt-6">
+                    <button onclick="saveInvoice()" class="bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 font-semibold">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
                         </svg>
-                        新規作成
+                        保存
                     </button>
-                    <button onclick="handleLogout()" class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600">
-                        ログアウト
+                    <button onclick="printDocument()" class="bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 flex items-center justify-center gap-2 font-semibold">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        印刷
                     </button>
+                </div>
+
+                <!-- Saved Invoices Section -->
+                <div class="mt-8 border-t pt-6">
+                    <h3 class="font-semibold mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                        </svg>
+                        保存済み文書
+                    </h3>
+                    <div id="savedInvoicesList" class="space-y-2">
+                        <!-- Saved invoices will appear here -->
+                    </div>
                 </div>
             </div>
 
-            <!-- Same invoice form as before -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Left column - Form (same as before, keeping it concise here) -->
-                <div class="bg-white rounded-lg shadow-lg p-6 no-print" id="invoiceForm">
-                    <h2 class="text-xl font-bold mb-4">文書情報入力</h2>
-                    <p class="text-sm text-gray-600 mb-4">※ このバージョンはデモです。実際のサーバー機能は別途実装が必要です。</p>
-                    <!-- Form fields would go here - using the same structure as the original app -->
-                </div>
-
-                <!-- Right column - Preview -->
-                <div class="bg-white rounded-lg shadow-lg p-6" id="preview-section">
-                    <h2 class="text-xl font-bold mb-4 no-print">プレビュー</h2>
-                    <div id="invoicePreview" class="border p-8 bg-white print-document" style="min-height: 800px;">
-                        <p class="text-gray-500 text-center">プレビューがここに表示されます</p>
-                    </div>
+            <!-- Preview -->
+            <div class="bg-white rounded-lg shadow-lg p-6" id="preview-section">
+                <h2 class="text-xl font-bold mb-4 no-print">プレビュー</h2>
+                <div id="invoicePreview" class="border p-8 bg-white print-document" style="min-height: 800px;">
+                    <!-- Preview content will be inserted here -->
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Simple authentication state management
-        let currentUser = null;
-        
-        function showLogin() {
-            document.getElementById('loginScreen').style.display = 'block';
-            document.getElementById('registerScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-        
-        function showRegister() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('registerScreen').style.display = 'block';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-        
-        function showMainApp() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('registerScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            
-            if (currentUser) {
-                document.getElementById('userInfo').textContent = `ログイン中: ${currentUser.email}`;
+        let items = [{description: '', quantity: 1, unitPrice: 0}];
+        let documentType = 'invoice';
+        let currentInvoiceId = null;
+        let language = 'ja';
+        let currency = 'JPY';
+        let exchangeRate = 1;
+        let exchangeRateDate = '';
+
+        // Fixed company information
+        const COMPANY_INFO = {
+            ja: {
+                name: '合同会社Snowisland9',
+                postalCode: '155-0032',
+                address: '東京都世田谷区代沢1-5-9',
+                registrationNumber: 'T9010903006381'
+            },
+            en: {
+                name: 'Snowisland9 LLC',
+                postalCode: '155-0032',
+                address: '1-5-9 Daizawa, Setagaya-ku, Tokyo, Japan',
+                registrationNumber: 'T9010903006381'
             }
-        }
-        
-        // Demo login (in production, this would call Cloudflare Workers API)
-        function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!email || !password) {
-                alert('メールアドレスとパスワードを入力してください');
-                return;
+        };
+
+        const BANK_INFO = {
+            ja: {
+                bankName: '住信SBIネット銀行',
+                branchName: '法人第一支店（106）',
+                accountType: '普通',
+                accountNumber: '1608149',
+                accountName: 'ド）スノーアイランドナイン'
+            },
+            en: {
+                bankName: 'SBI Sumishin Net Bank',
+                branchName: 'Corporate Account Branch No.1 (106)',
+                swiftCode: 'NTSSJPJT',
+                accountType: 'Savings',
+                accountNumber: '1608149',
+                accountName: 'Snowisland9 LLC',
+                paypalEmail: '__@cartonstudio9'
             }
-            
-            // Demo authentication (replace with real API call)
-            if (email === 'demo@example.com' && password === 'demo123') {
-                currentUser = { email: email, id: 'demo-user' };
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                showMainApp();
-                initializeApp();
-            } else {
-                // In production, call API
-                alert('このデモでは demo@example.com / demo123 を使用してください\n\n実際のサーバー版では、ここでCloudflare Workers APIを呼び出します。');
+        };
+
+        const LABELS = {
+            ja: {
+                invoice: '請求書',
+                delivery: '納品書',
+                invoiceNumber: '請求書番号',
+                deliveryNumber: '納品書番号',
+                to: '宛先',
+                honorific: '御中',
+                issuer: '発行者',
+                issueDate: '発行日',
+                dueDate: '支払期限',
+                subject: '件名',
+                message: '下記の通りご請求申し上げます。',
+                deliveryMessage: '下記の通り納品申し上げます。',
+                item: '品目',
+                quantity: '数量',
+                unitPrice: '単価',
+                amount: '金額',
+                subtotal: '小計',
+                tax: '消費税（10%）',
+                total: '合計金額',
+                bankInfo: '振込先',
+                registrationNumber: '登録番号'
+            },
+            en: {
+                invoice: 'INVOICE',
+                delivery: 'DELIVERY NOTE',
+                invoiceNumber: 'Invoice Number',
+                deliveryNumber: 'Delivery Number',
+                to: 'Bill To',
+                honorific: '',
+                issuer: 'From',
+                issueDate: 'Issue Date',
+                dueDate: 'Due Date',
+                subject: 'Subject',
+                message: 'Payment is requested for the following:',
+                deliveryMessage: 'The following items have been delivered:',
+                item: 'Description',
+                quantity: 'Qty',
+                unitPrice: 'Unit Price',
+                amount: 'Amount',
+                subtotal: 'Subtotal',
+                tax: 'Tax (10%)',
+                total: 'Total Amount',
+                bankInfo: 'Payment Information',
+                registrationNumber: 'Registration No.',
+                exchangeRate: 'Exchange Rate'
             }
-        }
-        
-        function handleRegister() {
-            const company = document.getElementById('registerCompany').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            
-            if (!company || !email || !password) {
-                alert('すべての項目を入力してください');
-                return;
-            }
-            
-            if (password.length < 6) {
-                alert('パスワードは6文字以上で設定してください');
-                return;
-            }
-            
-            // In production, this would call Cloudflare Workers API
-            alert('実際のサーバー版では、ここでアカウントが作成されます。\n\nデモではログイン画面に戻ってください。');
-            showLogin();
-        }
-        
-        function handleLogout() {
-            if (confirm('ログアウトしますか？')) {
-                currentUser = null;
-                localStorage.removeItem('currentUser');
-                showLogin();
-            }
-        }
-        
-        function newInvoice() {
-            alert('新規作成機能（実装中）');
-        }
-        
-        function initializeApp() {
-            // Initialize the invoice app
-            alert('アプリを初期化しました。実際のサーバー版では、ここでユーザーの請求書データを読み込みます。');
-        }
-        
-        // Check if user is already logged in
-        window.addEventListener('DOMContentLoaded', function() {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                showMainApp();
-                initializeApp();
-            } else {
-                showLogin();
-            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('issueDate').value = today;
+            renderItems();
+            updatePreview();
+            loadSavedInvoices();
         });
+
+        function updateLanguage(lang) {
+            language = lang;
+            const paypalOption = document.getElementById('paypalOption');
+            const currencySection = document.getElementById('currencySection');
+            
+            paypalOption.style.display = lang === 'en' ? 'block' : 'none';
+            currencySection.style.display = lang === 'en' ? 'block' : 'none';
+            
+            if (lang === 'ja') {
+                currency = 'JPY';
+                exchangeRate = 1;
+            }
+            
+            updatePreview();
+        }
+
+        function updateCurrency() {
+            currency = document.getElementById('currencySelect').value;
+            if (currency === 'JPY') {
+                exchangeRate = 1;
+                exchangeRateDate = '';
+                document.getElementById('exchangeRateInfo').textContent = '';
+            } else {
+                // User should fetch the rate manually
+                document.getElementById('exchangeRateInfo').textContent = 
+                    exchangeRate > 1 
+                    ? `1 JPY = ${(1/exchangeRate).toFixed(4)} ${currency} (${exchangeRateDate || '未設定'})`
+                    : 'レート未設定 - 「最新レートを取得」をクリックしてください';
+            }
+            updatePreview();
+        }
+
+        async function fetchExchangeRate() {
+            const selectedCurrency = document.getElementById('currencySelect').value;
+            if (selectedCurrency === 'JPY') {
+                alert('JPYが選択されています。他の通貨を選択してください。');
+                return;
+            }
+
+            try {
+                // Using exchangerate-api.com (free tier, no API key needed)
+                const response = await fetch(`https://api.exchangerate-api.com/v4/latest/JPY`);
+                const data = await response.json();
+                
+                if (data.rates && data.rates[selectedCurrency]) {
+                    exchangeRate = data.rates[selectedCurrency];
+                    exchangeRateDate = new Date().toLocaleDateString('ja-JP');
+                    
+                    document.getElementById('exchangeRateInfo').textContent = 
+                        `1 JPY = ${exchangeRate.toFixed(4)} ${selectedCurrency} (${exchangeRateDate})`;
+                    
+                    updatePreview();
+                    alert(`為替レートを取得しました: 1 JPY = ${exchangeRate.toFixed(4)} ${selectedCurrency}`);
+                } else {
+                    throw new Error('レート取得失敗');
+                }
+            } catch (error) {
+                alert('為替レートの取得に失敗しました。手動で入力してください。');
+                const manualRate = prompt(`1 JPY = ? ${selectedCurrency}\n手動で為替レートを入力してください:`);
+                if (manualRate && !isNaN(manualRate)) {
+                    exchangeRate = parseFloat(manualRate);
+                    exchangeRateDate = new Date().toLocaleDateString('ja-JP') + ' (手動入力)';
+                    document.getElementById('exchangeRateInfo').textContent = 
+                        `1 JPY = ${exchangeRate.toFixed(4)} ${selectedCurrency} (${exchangeRateDate})`;
+                    updatePreview();
+                }
+            }
+        }
+
+        function updateDocType(type) {
+            documentType = type;
+            const dueDateContainer = document.getElementById('dueDateContainer');
+            dueDateContainer.style.display = type === 'invoice' ? 'block' : 'none';
+            updatePreview();
+        }
+
+        function addItem() {
+            items.push({description: '', quantity: 1, unitPrice: 0});
+            renderItems();
+            updatePreview();
+        }
+
+        function removeItem(index) {
+            if (items.length > 1) {
+                items.splice(index, 1);
+                renderItems();
+                updatePreview();
+            }
+        }
+
+        function updateItem(index, field, value) {
+            items[index][field] = field === 'description' ? value : parseFloat(value) || 0;
+            updatePreview();
+        }
+
+        function renderItems() {
+            const container = document.getElementById('itemsContainer');
+            container.innerHTML = items.map((item, index) => `
+                <div class="mb-3 p-3 bg-gray-50 rounded relative">
+                    ${items.length > 1 ? `
+                        <button onclick="removeItem(${index})" class="absolute top-2 right-2 text-red-500 hover:text-red-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    ` : ''}
+                    <input type="text" placeholder="品目・サービス名" value="${item.description}" 
+                        oninput="updateItem(${index}, 'description', this.value)" 
+                        class="w-full p-2 border rounded mb-2">
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="number" placeholder="数量" value="${item.quantity}" 
+                            oninput="updateItem(${index}, 'quantity', this.value)" 
+                            class="p-2 border rounded">
+                        <input type="number" placeholder="単価" value="${item.unitPrice}" 
+                            oninput="updateItem(${index}, 'unitPrice', this.value)" 
+                            class="p-2 border rounded">
+                        <input type="text" value="${formatCurrency(item.quantity * item.unitPrice)}" 
+                            readonly class="p-2 border rounded bg-gray-100">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function calculateSubtotal() {
+            return items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+        }
+
+        function calculateTax() {
+            return Math.floor(calculateSubtotal() * 0.1);
+        }
+
+        function calculateTotal() {
+            return calculateSubtotal() + calculateTax();
+        }
+
+        function formatCurrency(amount) {
+            const convertedAmount = currency === 'JPY' ? amount : amount * exchangeRate;
+            
+            // Special formatting for currencies without decimal places
+            const decimals = ['JPY', 'KRW'].includes(currency) ? 0 : 2;
+            
+            return new Intl.NumberFormat(language === 'ja' ? 'ja-JP' : 'en-US', {
+                style: 'currency',
+                currency: currency,
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            }).format(convertedAmount);
+        }
+
+        // Save invoice to localStorage
+        function saveInvoice() {
+            const invoiceData = {
+                id: currentInvoiceId || Date.now().toString(),
+                documentType: documentType,
+                language: language,
+                currency: currency,
+                exchangeRate: exchangeRate,
+                exchangeRateDate: exchangeRateDate,
+                clientInfo: {
+                    name: document.getElementById('clientName').value,
+                    postalCode: document.getElementById('clientPostal').value,
+                    address: document.getElementById('clientAddress').value
+                },
+                documentInfo: {
+                    number: document.getElementById('docNumber').value,
+                    date: document.getElementById('issueDate').value,
+                    dueDate: document.getElementById('dueDate').value,
+                    subject: document.getElementById('subject').value
+                },
+                items: items,
+                includePaypal: document.getElementById('includePaypal')?.checked || false,
+                savedAt: new Date().toISOString()
+            };
+
+            const savedInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+            const existingIndex = savedInvoices.findIndex(inv => inv.id === invoiceData.id);
+            
+            if (existingIndex >= 0) {
+                savedInvoices[existingIndex] = invoiceData;
+                alert('請求書を上書き保存しました！');
+            } else {
+                savedInvoices.push(invoiceData);
+                alert('請求書を保存しました！');
+            }
+            
+            localStorage.setItem('invoices', JSON.stringify(savedInvoices));
+            currentInvoiceId = invoiceData.id;
+            loadSavedInvoices();
+        }
+
+        // Load saved invoices list
+        function loadSavedInvoices() {
+            const savedInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+            const container = document.getElementById('savedInvoicesList');
+            
+            if (savedInvoices.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">保存された文書はありません</p>';
+                return;
+            }
+
+            container.innerHTML = savedInvoices.map(invoice => {
+                const date = new Date(invoice.savedAt).toLocaleDateString('ja-JP');
+                const docType = invoice.documentType === 'invoice' ? '請求書' : '納品書';
+                const clientName = invoice.clientInfo.name || '未設定';
+                const total = formatCurrency(
+                    invoice.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) * 1.1
+                );
+                
+                return `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold">${docType}</span>
+                                <span class="text-sm text-gray-600">No.${invoice.documentInfo.number || 'N/A'}</span>
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                ${clientName} 様 | ${total} | ${date}
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="loadInvoice('${invoice.id}')" 
+                                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                                読込
+                            </button>
+                            <button onclick="deleteInvoice('${invoice.id}')" 
+                                class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
+                                削除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load specific invoice
+        function loadInvoice(id) {
+            const savedInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+            const invoice = savedInvoices.find(inv => inv.id === id);
+            
+            if (!invoice) {
+                alert('請求書が見つかりません');
+                return;
+            }
+
+            // Load document type
+            documentType = invoice.documentType;
+            document.querySelector(`input[name="docType"][value="${invoice.documentType}"]`).checked = true;
+            updateDocType(invoice.documentType);
+
+            // Load language
+            language = invoice.language || 'ja';
+            document.querySelector(`input[name="language"][value="${language}"]`).checked = true;
+            updateLanguage(language);
+
+            // Load currency settings
+            currency = invoice.currency || 'JPY';
+            exchangeRate = invoice.exchangeRate || 1;
+            exchangeRateDate = invoice.exchangeRateDate || '';
+            
+            if (language === 'en') {
+                document.getElementById('currencySelect').value = currency;
+                if (exchangeRateDate) {
+                    document.getElementById('exchangeRateInfo').textContent = 
+                        currency === 'JPY' ? '' : `1 JPY = ${exchangeRate.toFixed(4)} ${currency} (${exchangeRateDate})`;
+                }
+            }
+
+            // Load client info
+            document.getElementById('clientName').value = invoice.clientInfo.name;
+            document.getElementById('clientPostal').value = invoice.clientInfo.postalCode;
+            document.getElementById('clientAddress').value = invoice.clientInfo.address;
+
+            // Load document info
+            document.getElementById('docNumber').value = invoice.documentInfo.number;
+            document.getElementById('issueDate').value = invoice.documentInfo.date;
+            document.getElementById('dueDate').value = invoice.documentInfo.dueDate;
+            document.getElementById('subject').value = invoice.documentInfo.subject;
+
+            // Load PayPal option
+            if (document.getElementById('includePaypal')) {
+                document.getElementById('includePaypal').checked = invoice.includePaypal || false;
+            }
+
+            // Load items
+            items = invoice.items;
+            currentInvoiceId = invoice.id;
+
+            renderItems();
+            updatePreview();
+            
+            alert('請求書を読み込みました！');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Delete invoice
+        function deleteInvoice(id) {
+            if (!confirm('この文書を削除してもよろしいですか？')) {
+                return;
+            }
+
+            const savedInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+            const filteredInvoices = savedInvoices.filter(inv => inv.id !== id);
+            localStorage.setItem('invoices', JSON.stringify(filteredInvoices));
+            
+            if (currentInvoiceId === id) {
+                currentInvoiceId = null;
+            }
+            
+            loadSavedInvoices();
+            alert('削除しました');
+        }
+
+        // Clear form
+        function newInvoice() {
+            if (confirm('新規作成しますか？入力中のデータは失われます。')) {
+                currentInvoiceId = null;
+                items = [{description: '', quantity: 1, unitPrice: 0}];
+                
+                document.getElementById('clientName').value = '';
+                document.getElementById('clientPostal').value = '';
+                document.getElementById('clientAddress').value = '';
+                document.getElementById('docNumber').value = '';
+                document.getElementById('issueDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('dueDate').value = '';
+                document.getElementById('subject').value = '';
+                
+                renderItems();
+                updatePreview();
+            }
+        }
+
+        function updatePreview() {
+            const subtotal = calculateSubtotal();
+            const tax = calculateTax();
+            const total = calculateTotal();
+
+            document.getElementById('subtotalDisplay').textContent = formatCurrency(subtotal);
+            document.getElementById('taxDisplay').textContent = formatCurrency(tax);
+            document.getElementById('totalDisplay').textContent = formatCurrency(total);
+
+            const clientName = document.getElementById('clientName').value || (language === 'ja' ? '（宛先未入力）' : '(Not specified)');
+            const clientPostal = document.getElementById('clientPostal').value;
+            const clientAddress = document.getElementById('clientAddress').value;
+
+            const docNumber = document.getElementById('docNumber').value || 'N/A';
+            const issueDate = document.getElementById('issueDate').value;
+            const dueDate = document.getElementById('dueDate').value;
+            const subject = document.getElementById('subject').value;
+
+            const labels = LABELS[language];
+            const companyInfo = COMPANY_INFO[language];
+            const bankInfo = BANK_INFO[language];
+            const includePaypal = document.getElementById('includePaypal')?.checked || false;
+
+            const docTitle = labels[documentType];
+            const docNumberLabel = documentType === 'invoice' ? labels.invoiceNumber : labels.deliveryNumber;
+            const message = documentType === 'invoice' ? labels.message : labels.deliveryMessage;
+
+            const preview = document.getElementById('invoicePreview');
+            preview.innerHTML = `
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 8px;">
+                        <h1 style="font-size: 20px; margin: 0;">${docTitle}</h1>
+                    </div>
+
+                    <div style="margin: 15px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                            <div style="flex: 1;">
+                                <h3 style="font-size: 9px; margin-bottom: 6px; border-bottom: 1px solid #ccc; padding-bottom: 3px;">${labels.to}</h3>
+                                <p style="margin: 2px 0; font-size: 9px;"><strong>${clientName}${language === 'ja' ? ' ' + labels.honorific : ''}</strong></p>
+                                <p style="margin: 2px 0; font-size: 9px;">${language === 'ja' ? '〒' : ''}${clientPostal}</p>
+                                <p style="margin: 2px 0; font-size: 9px;">${clientAddress}</p>
+                            </div>
+                            <div style="flex: 1; text-align: right;">
+                                <p style="font-size: 9px; margin-bottom: 3px;">${docNumberLabel}: ${docNumber}</p>
+                                <p style="font-size: 9px; margin-bottom: 3px;">${labels.issueDate}: ${issueDate}</p>
+                                ${documentType === 'invoice' && dueDate ? `<p style="font-size: 9px; margin-bottom: 10px;">${labels.dueDate}: ${dueDate}</p>` : ''}
+                                <h3 style="font-size: 9px; margin-bottom: 6px; margin-top: 10px; border-bottom: 1px solid #ccc; padding-bottom: 3px;">${labels.issuer}</h3>
+                                <p style="margin: 2px 0; font-size: 9px;"><strong>${companyInfo.name}</strong></p>
+                                <p style="margin: 2px 0; font-size: 9px;">${language === 'ja' ? '〒' : ''}${companyInfo.postalCode}</p>
+                                <p style="margin: 2px 0; font-size: 9px;">${companyInfo.address}</p>
+                                <p style="margin: 2px 0; font-size: 9px; margin-top: 5px;">${labels.registrationNumber}: ${companyInfo.registrationNumber}</p>
+                            </div>
+                        </div>
+
+                        ${subject ? `<div style="margin-bottom: 15px; font-size: 9px;"><p><strong>${labels.subject}:</strong> ${subject}</p></div>` : ''}
+
+                        <div style="margin-bottom: 15px; font-size: 9px;">
+                            <p>${message}</p>
+                        </div>
+
+                        <table style="font-size: 9px;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50%; padding: 5px;">${labels.item}</th>
+                                    <th style="width: 15%; text-align: right; padding: 5px;">${labels.quantity}</th>
+                                    <th style="width: 17%; text-align: right; padding: 5px;">${labels.unitPrice}</th>
+                                    <th style="width: 18%; text-align: right; padding: 5px;">${labels.amount}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${items.map(item => `
+                                    <tr>
+                                        <td style="padding: 5px;">${item.description || (language === 'ja' ? '（未入力）' : '(Not specified)')}</td>
+                                        <td style="text-align: right; padding: 5px;">${item.quantity}</td>
+                                        <td style="text-align: right; padding: 5px;">${formatCurrency(item.unitPrice)}</td>
+                                        <td style="text-align: right; padding: 5px;">${formatCurrency(item.quantity * item.unitPrice)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top: 15px; float: right; width: 250px;">
+                            <table style="font-size: 9px;">
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 4px;">${labels.subtotal}</td>
+                                        <td style="text-align: right; padding: 4px;">${formatCurrency(subtotal)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 4px;">${labels.tax}</td>
+                                        <td style="text-align: right; padding: 4px;">${formatCurrency(tax)}</td>
+                                    </tr>
+                                    <tr style="font-weight: bold; background-color: #f0f0f0;">
+                                        <td style="padding: 4px;">${labels.total}</td>
+                                        <td style="text-align: right; padding: 4px;">${formatCurrency(total)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        ${documentType === 'invoice' ? `
+                            <div style="clear: both; margin-top: 80px; padding-top: 15px; border-top: 1px solid #ccc;">
+                                ${language === 'en' && currency !== 'JPY' && exchangeRateDate ? `
+                                    <p style="margin: 2px 0 10px 0; font-size: 8px; color: #666;">
+                                        ${labels.exchangeRate}: 1 JPY = ${exchangeRate.toFixed(4)} ${currency} (${exchangeRateDate})
+                                    </p>
+                                ` : ''}
+                                <h3 style="font-size: 9px; margin-bottom: 6px; border-bottom: 1px solid #ccc; padding-bottom: 3px;">${labels.bankInfo}</h3>
+                                ${language === 'ja' ? `
+                                    <p style="margin: 2px 0; font-size: 9px;"><strong>${bankInfo.bankName}</strong></p>
+                                    <p style="margin: 2px 0; font-size: 9px;">${bankInfo.branchName}</p>
+                                    <p style="margin: 2px 0; font-size: 9px;">${bankInfo.accountType} ${bankInfo.accountNumber}</p>
+                                    <p style="margin: 2px 0; font-size: 9px;">${bankInfo.accountName}</p>
+                                ` : `
+                                    <p style="margin: 2px 0; font-size: 9px;"><strong>Bank Name:</strong> ${bankInfo.bankName}</p>
+                                    <p style="margin: 2px 0; font-size: 9px;"><strong>Branch:</strong> ${bankInfo.branchName}</p>
+                                    <p style="margin: 2px 0; font-size: 9px;"><strong>SWIFT Code:</strong> ${bankInfo.swiftCode}</p>
+                                    <p style="margin: 2px 0; font-size: 9px;"><strong>Account Type:</strong> ${bankInfo.accountType}</p>
+                                    <p style="margin: 2px 0; font-size: 9px;"><strong>Account Number:</strong> ${bankInfo.accountNumber}</p>
+                                    <p style="margin: 2px 0; font-size: 9px;"><strong>Account Name:</strong> ${bankInfo.accountName}</p>
+                                    ${includePaypal ? `
+                                        <p style="margin: 8px 0 2px 0; font-size: 9px;"><strong>Alternative Payment:</strong></p>
+                                        <p style="margin: 2px 0; font-size: 9px;">PayPal: ${bankInfo.paypalEmail}</p>
+                                    ` : ''}
+                                `}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function printDocument() {
+            window.print();
+        }
     </script>
 </body>
 </html>
