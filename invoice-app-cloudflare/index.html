@@ -349,7 +349,7 @@
 
 
     <script>
-        let items = [{description: '', quantity: 1, unitPrice: 0}];
+        let items = [{description: '', quantity: 1, unit: '個', unitPrice: 0}];
         let documentType = 'invoice';
         let currentInvoiceId = null;
         let language = 'ja';
@@ -651,6 +651,29 @@
             renderItems();
             updatePreview();
             loadSavedInvoices();
+            
+            // Tax rate select handler
+            const taxRateSelect = document.getElementById('taxRate');
+            const customTaxInput = document.getElementById('customTaxRate');
+            const includeTaxCheckbox = document.getElementById('includeTax');
+            const taxRateSection = document.getElementById('taxRateSection');
+            
+            if (taxRateSelect) {
+                taxRateSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customTaxInput.style.display = 'block';
+                    } else {
+                        customTaxInput.style.display = 'none';
+                    }
+                });
+            }
+            
+            if (includeTaxCheckbox) {
+                includeTaxCheckbox.addEventListener('change', function() {
+                    taxRateSection.style.display = this.checked ? 'block' : 'none';
+                    updatePreview();
+                });
+            }
         });
 
         function updateLanguage(lang) {
@@ -782,6 +805,19 @@
 
         function calculateTax() {
             return Math.floor(calculateSubtotal() * 0.1);
+        }
+
+
+        function getTaxRateDisplay() {
+            const includeTax = document.getElementById('includeTax')?.checked;
+            if (!includeTax) return '（0%）';
+            
+            const taxRate = document.getElementById('taxRate').value;
+            if (taxRate === 'custom') {
+                const customRate = document.getElementById('customTaxRate').value;
+                return `（${customRate}%）`;
+            }
+            return `（${taxRate}%）`;
         }
 
         function calculateTotal() {
