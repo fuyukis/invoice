@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>請求書・納品書作成アプリ S9version</title>
+    <title>見積書・請求書・納品書作成アプリ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media print {
@@ -35,21 +35,50 @@
         .print-document th {
             background-color: #f0f0f0;
         }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-8 no-print">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">請求書・納品書作成</h1>
-            <p class="text-gray-600">ビジネス文書を簡単に作成</p>
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">見積書・請求書・納品書作成</h1>
+            <p class="text-gray-600">ビジネス文書を簡単に作成 + 取引先管理</p>
             <button onclick="newInvoice()" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2 mx-auto">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 新規作成
             </button>
+
+            <!-- Tab Navigation -->
+            <div class="mt-6 flex justify-center gap-2 no-print">
+                <button onclick="showTab('invoice')" id="tab-invoice" class="px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold">
+                    文書作成
+                </button>
+                <button onclick="showTab('clients')" id="tab-clients" class="px-6 py-2 rounded-lg bg-gray-200 font-semibold hover:bg-gray-300">
+                    取引先管理
+                </button>
+            </div>
         </div>
 
+        
+        <div id="content-invoice">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Input Form -->
             <div class="bg-white rounded-lg shadow-lg p-6 no-print">
@@ -63,7 +92,17 @@
                 <!-- Document Type -->
                 <div class="mb-6">
                     <label class="block text-sm font-semibold mb-2">文書種類</label>
-                    <div class="flex gap-4 mb-3">
+                    <div class="flex gap-4 mb-3 flex-wrap">
+                        <label class="flex items-center">
+                            <input
+                                type="radio"
+                                value="quote"
+                                onchange="updateDocType(this.value)"
+                                name="docType"
+                                class="mr-2"
+                            />
+                            見積書
+                        </label>
                         <label class="flex items-center">
                             <input
                                 type="radio"
@@ -161,9 +200,14 @@
                     </div>
                 </div>
 
-                <!-- Client Info -->
+                <!-- Client Info with Selection -->
                 <div class="mb-6 p-4 bg-green-50 rounded">
-                    <h3 class="font-semibold mb-3">宛先情報</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-semibold">宛先情報</h3>
+                        <button onclick="openClientSelector()" class="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
+                            取引先から選択
+                        </button>
+                    </div>
                     <input type="text" id="clientName" placeholder="宛先（会社名・氏名）" oninput="updatePreview()" class="w-full p-2 border rounded mb-2">
                     <input type="text" id="clientPostal" placeholder="郵便番号" oninput="updatePreview()" class="w-full p-2 border rounded mb-2">
                     <input type="text" id="clientAddress" placeholder="住所" oninput="updatePreview()" class="w-full p-2 border rounded">
@@ -255,6 +299,55 @@
         </div>
     </div>
 
+        </div>
+
+        <!-- Client Management Tab -->
+        <div id="content-clients" style="display: none;">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">取引先管理</h2>
+                    <button onclick="openClientForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        新規登録
+                    </button>
+                </div>
+                <div id="clientsList" class="space-y-3">
+                    <!-- Clients will be listed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Form Modal -->
+    <div id="clientModal" class="modal">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4" id="clientModalTitle">取引先登録</h3>
+            <input type="hidden" id="clientId">
+            <div class="space-y-3">
+                <input type="text" id="clientFormName" placeholder="会社名・氏名" class="w-full p-2 border rounded">
+                <input type="text" id="clientFormPostal" placeholder="郵便番号" class="w-full p-2 border rounded">
+                <input type="text" id="clientFormAddress" placeholder="住所" class="w-full p-2 border rounded">
+                <input type="text" id="clientFormTel" placeholder="電話番号" class="w-full p-2 border rounded">
+                <input type="email" id="clientFormEmail" placeholder="メールアドレス" class="w-full p-2 border rounded">
+            </div>
+            <div class="flex gap-2 mt-6">
+                <button onclick="saveClient()" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">保存</button>
+                <button onclick="closeClientForm()" class="flex-1 bg-gray-200 py-2 rounded hover:bg-gray-300">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Selector Modal -->
+    <div id="clientSelectorModal" class="modal">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4">取引先を選択</h3>
+            <div id="clientSelectorList" class="space-y-2">
+                <!-- Clients for selection will be listed here -->
+            </div>
+            <button onclick="closeClientSelector()" class="mt-4 w-full bg-gray-200 py-2 rounded hover:bg-gray-300">キャンセル</button>
+        </div>
+    </div>
+
+
     <script>
         let items = [{description: '', quantity: 1, unitPrice: 0}];
         let documentType = 'invoice';
@@ -299,10 +392,210 @@
             }
         };
 
+        // ============ Client Management ============
+        
+        function getClients() {
+            const clients = localStorage.getItem('clients');
+            return clients ? JSON.parse(clients) : [];
+        }
+
+        function saveClients(clients) {
+            localStorage.setItem('clients', JSON.stringify(clients));
+        }
+
+        function showTab(tabName) {
+            document.getElementById('content-invoice').style.display = 'none';
+            const clientsTab = document.getElementById('content-clients');
+            if (clientsTab) clientsTab.style.display = 'none';
+            
+            if (tabName === 'invoice') {
+                document.getElementById('content-invoice').style.display = 'block';
+            } else if (tabName === 'clients') {
+                if (clientsTab) {
+                    clientsTab.style.display = 'block';
+                    loadClientsList();
+                }
+            }
+            
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.className = 'px-6 py-2 rounded-lg bg-gray-200 font-semibold hover:bg-gray-300';
+            });
+            const activeTab = document.getElementById('tab-' + tabName);
+            if (activeTab) {
+                activeTab.className = 'px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold';
+            }
+        }
+
+        function openClientForm(clientId = null) {
+            const modal = document.getElementById('clientModal');
+            modal.classList.add('active');
+            
+            if (clientId) {
+                const clients = getClients();
+                const client = clients.find(c => c.id === clientId);
+                
+                if (client) {
+                    document.getElementById('clientModalTitle').textContent = '取引先編集';
+                    document.getElementById('clientId').value = client.id;
+                    document.getElementById('clientFormName').value = client.name;
+                    document.getElementById('clientFormPostal').value = client.postalCode;
+                    document.getElementById('clientFormAddress').value = client.address;
+                    document.getElementById('clientFormTel').value = client.tel || '';
+                    document.getElementById('clientFormEmail').value = client.email || '';
+                }
+            } else {
+                document.getElementById('clientModalTitle').textContent = '取引先登録';
+                document.getElementById('clientId').value = '';
+                document.getElementById('clientFormName').value = '';
+                document.getElementById('clientFormPostal').value = '';
+                document.getElementById('clientFormAddress').value = '';
+                document.getElementById('clientFormTel').value = '';
+                document.getElementById('clientFormEmail').value = '';
+            }
+        }
+
+        function closeClientForm() {
+            document.getElementById('clientModal').classList.remove('active');
+        }
+
+        function saveClient() {
+            const name = document.getElementById('clientFormName').value.trim();
+            const postalCode = document.getElementById('clientFormPostal').value.trim();
+            const address = document.getElementById('clientFormAddress').value.trim();
+            const tel = document.getElementById('clientFormTel').value.trim();
+            const email = document.getElementById('clientFormEmail').value.trim();
+            
+            if (!name) {
+                alert('会社名・氏名を入力してください');
+                return;
+            }
+            
+            const clients = getClients();
+            const clientId = document.getElementById('clientId').value;
+            
+            if (clientId) {
+                const index = clients.findIndex(c => c.id === clientId);
+                if (index >= 0) {
+                    clients[index] = {
+                        id: clientId,
+                        name,
+                        postalCode,
+                        address,
+                        tel,
+                        email,
+                        updatedAt: new Date().toISOString()
+                    };
+                }
+            } else {
+                clients.push({
+                    id: Date.now().toString(),
+                    name,
+                    postalCode,
+                    address,
+                    tel,
+                    email,
+                    createdAt: new Date().toISOString()
+                });
+            }
+            
+            saveClients(clients);
+            closeClientForm();
+            loadClientsList();
+            alert('保存しました');
+        }
+
+        function loadClientsList() {
+            const container = document.getElementById('clientsList');
+            const clients = getClients();
+            
+            if (clients.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">登録された取引先がありません</p>';
+                return;
+            }
+            
+            container.innerHTML = clients.map(client => `
+                <div class="p-4 border rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-lg">${client.name}</h3>
+                            <p class="text-sm text-gray-600">〒${client.postalCode || ''}</p>
+                            <p class="text-sm text-gray-600">${client.address || ''}</p>
+                            ${client.tel ? `<p class="text-sm text-gray-600">TEL: ${client.tel}</p>` : ''}
+                            ${client.email ? `<p class="text-sm text-gray-600">Email: ${client.email}</p>` : ''}
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openClientForm('${client.id}')" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                編集
+                            </button>
+                            <button onclick="deleteClient('${client.id}')" class="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600">
+                                削除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteClient(clientId) {
+            if (!confirm('この取引先を削除してもよろしいですか？')) {
+                return;
+            }
+            
+            const clients = getClients();
+            const filtered = clients.filter(c => c.id !== clientId);
+            saveClients(filtered);
+            loadClientsList();
+            alert('削除しました');
+        }
+
+        function openClientSelector() {
+            const modal = document.getElementById('clientSelectorModal');
+            modal.classList.add('active');
+            loadClientSelectorList();
+        }
+
+        function closeClientSelector() {
+            document.getElementById('clientSelectorModal').classList.remove('active');
+        }
+
+        function loadClientSelectorList() {
+            const container = document.getElementById('clientSelectorList');
+            const clients = getClients();
+            
+            if (clients.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">登録された取引先がありません</p>';
+                return;
+            }
+            
+            container.innerHTML = clients.map(client => `
+                <button onclick="selectClient('${client.id}')" class="w-full p-3 text-left border rounded hover:bg-blue-50">
+                    <div class="font-semibold">${client.name}</div>
+                    <div class="text-sm text-gray-600">${client.address || ''}</div>
+                </button>
+            `).join('');
+        }
+
+        function selectClient(clientId) {
+            const clients = getClients();
+            const client = clients.find(c => c.id === clientId);
+            
+            if (client) {
+                document.getElementById('clientName').value = client.name;
+                document.getElementById('clientPostal').value = client.postalCode || '';
+                document.getElementById('clientAddress').value = client.address || '';
+                
+                updatePreview();
+                closeClientSelector();
+            }
+        }
+
+
         const LABELS = {
             ja: {
+                quote: '見積書',
                 invoice: '請求書',
                 delivery: '納品書',
+                quoteNumber: '見積書番号',
                 invoiceNumber: '請求書番号',
                 deliveryNumber: '納品書番号',
                 to: '宛先',
@@ -324,8 +617,10 @@
                 registrationNumber: '登録番号'
             },
             en: {
+                quote: 'QUOTATION',
                 invoice: 'INVOICE',
                 delivery: 'DELIVERY NOTE',
+                quoteNumber: 'Quotation Number',
                 invoiceNumber: 'Invoice Number',
                 deliveryNumber: 'Delivery Number',
                 to: 'Bill To',
@@ -789,7 +1084,7 @@
                             </table>
                         </div>
 
-                        ${documentType === 'invoice' ? `
+                        ${(documentType === 'invoice' || documentType === 'quote') ? `
                             <div style="clear: both; margin-top: 80px; padding-top: 15px; border-top: 1px solid #ccc;">
                                 ${language === 'en' && currency !== 'JPY' && exchangeRateDate ? `
                                     <p style="margin: 2px 0 10px 0; font-size: 8px; color: #666;">
