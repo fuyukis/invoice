@@ -172,7 +172,29 @@
                     </div>
                 </div>
 
-                <!-- Company Info (Fixed) -->
+                
+                    <!-- Tax Settings -->
+                    <div class="mb-6 p-4 bg-orange-50 rounded">
+                        <h3 class="font-semibold mb-3">消費税設定</h3>
+                        <div class="flex items-center gap-4 mb-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="includeTax" checked onchange="updatePreview()" class="mr-2">
+                                <span class="text-sm">消費税を含める</span>
+                            </label>
+                        </div>
+                        <div id="taxRateSection">
+                            <label class="block text-xs mb-1">税率</label>
+                            <select id="taxRate" onchange="handleTaxRateChange()" class="w-full p-2 border rounded text-sm">
+                                <option value="10">10%（標準税率）</option>
+                                <option value="8">8%（軽減税率）</option>
+                                <option value="0">0%（非課税）</option>
+                                <option value="custom">カスタム</option>
+                            </select>
+                            <input type="number" id="customTaxRate" placeholder="税率を入力（%）" min="0" max="100" step="0.1" style="display: none;" onchange="updatePreview()" class="w-full p-2 border rounded text-sm mt-2">
+                        </div>
+                    </div>
+
+                    <!-- Company Info (Fixed) -->
                 <div class="mb-6 p-4 bg-blue-50 rounded">
                     <h3 class="font-semibold mb-3">発行者情報（固定）</h3>
                     <div class="text-sm space-y-1 text-gray-700">
@@ -228,7 +250,8 @@
                         </div>
                     </div>
                     <input type="text" id="subject" placeholder="件名" oninput="updatePreview()" class="w-full p-2 border rounded">
-                </div>
+                        <textarea id="notes" placeholder="備考・補足事項（任意）" oninput="updatePreview()" class="w-full p-2 border rounded mt-2" rows="2"></textarea>
+                    </div>
 
                 <!-- Items -->
                 <div class="mb-6">
@@ -652,29 +675,28 @@
             updatePreview();
             loadSavedInvoices();
             
-            // Tax rate select handler
-            const taxRateSelect = document.getElementById('taxRate');
-            const customTaxInput = document.getElementById('customTaxRate');
+            // Setup tax rate change handler
             const includeTaxCheckbox = document.getElementById('includeTax');
-            const taxRateSection = document.getElementById('taxRateSection');
-            
-            if (taxRateSelect) {
-                taxRateSelect.addEventListener('change', function() {
-                    if (this.value === 'custom') {
-                        customTaxInput.style.display = 'block';
-                    } else {
-                        customTaxInput.style.display = 'none';
-                    }
-                });
-            }
-            
             if (includeTaxCheckbox) {
                 includeTaxCheckbox.addEventListener('change', function() {
-                    taxRateSection.style.display = this.checked ? 'block' : 'none';
+                    const taxSection = document.getElementById('taxRateSection');
+                    if (taxSection) {
+                        taxSection.style.display = this.checked ? 'block' : 'none';
+                    }
                     updatePreview();
                 });
             }
         });
+
+
+        function handleTaxRateChange() {
+            const taxRate = document.getElementById('taxRate').value;
+            const customInput = document.getElementById('customTaxRate');
+            if (customInput) {
+                customInput.style.display = taxRate === 'custom' ? 'block' : 'none';
+            }
+            updatePreview();
+        }
 
         function updateLanguage(lang) {
             language = lang;
@@ -753,7 +775,7 @@
         }
 
         function addItem() {
-            items.push({description: '', quantity: 1, unitPrice: 0});
+            items.push({description: '', quantity: 1, unit: '個', unitPrice: 0});
             renderItems();
             updatePreview();
         }
@@ -805,19 +827,6 @@
 
         function calculateTax() {
             return Math.floor(calculateSubtotal() * 0.1);
-        }
-
-
-        function getTaxRateDisplay() {
-            const includeTax = document.getElementById('includeTax')?.checked;
-            if (!includeTax) return '（0%）';
-            
-            const taxRate = document.getElementById('taxRate').value;
-            if (taxRate === 'custom') {
-                const customRate = document.getElementById('customTaxRate').value;
-                return `（${customRate}%）`;
-            }
-            return `（${taxRate}%）`;
         }
 
         function calculateTotal() {
