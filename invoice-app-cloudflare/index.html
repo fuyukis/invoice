@@ -274,7 +274,7 @@
                         <span class="font-semibold" id="subtotalDisplay">¥0</span>
                     </div>
                     <div class="flex justify-between mb-2">
-                        <span>消費税（10%）</span>
+                        <span id="taxLabelDisplay">消費税（10%）</span>
                         <span class="font-semibold" id="taxDisplay">¥0</span>
                     </div>
                     <div class="flex justify-between text-lg font-bold border-t pt-2">
@@ -807,10 +807,21 @@
                     <input type="text" placeholder="品目・サービス名" value="${item.description}" 
                         oninput="updateItem(${index}, 'description', this.value)" 
                         class="w-full p-2 border rounded mb-2">
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-4 gap-2">
                         <input type="number" placeholder="数量" value="${item.quantity}" 
                             oninput="updateItem(${index}, 'quantity', this.value)" 
                             class="p-2 border rounded">
+                        <select onchange="updateItem(${index}, 'unit', this.value)" class="p-2 border rounded">
+                            <option value="個" ${(item.unit || '個') === '個' ? 'selected' : ''}>個</option>
+                            <option value="件" ${item.unit === '件' ? 'selected' : ''}>件</option>
+                            <option value="日" ${item.unit === '日' ? 'selected' : ''}>日</option>
+                            <option value="時間" ${item.unit === '時間' ? 'selected' : ''}>時間</option>
+                            <option value="式" ${item.unit === '式' ? 'selected' : ''}>式</option>
+                            <option value="台" ${item.unit === '台' ? 'selected' : ''}>台</option>
+                            <option value="本" ${item.unit === '本' ? 'selected' : ''}>本</option>
+                            <option value="枚" ${item.unit === '枚' ? 'selected' : ''}>枚</option>
+                            <option value="セット" ${item.unit === 'セット' ? 'selected' : ''}>セット</option>
+                        </select>
                         <input type="number" placeholder="単価" value="${item.unitPrice}" 
                             oninput="updateItem(${index}, 'unitPrice', this.value)" 
                             class="p-2 border rounded">
@@ -826,7 +837,25 @@
         }
 
         function calculateTax() {
-            return Math.floor(calculateSubtotal() * 0.1);
+            const includeTax = document.getElementById('includeTax')?.checked ?? true;
+            
+            if (!includeTax) {
+                return 0;
+            }
+            
+            const taxRateSelect = document.getElementById('taxRate');
+            let taxRate = 10;
+            
+            if (taxRateSelect) {
+                if (taxRateSelect.value === 'custom') {
+                    taxRate = Number(document.getElementById('customTaxRate')?.value) || 0;
+                } else {
+                    taxRate = Number(taxRateSelect.value) || 10;
+                }
+            }
+            
+            const subtotal = calculateSubtotal();
+            return Math.floor(subtotal * (taxRate / 100));
         }
 
         function calculateTotal() {
@@ -1033,6 +1062,26 @@
             const subtotal = calculateSubtotal();
             const tax = calculateTax();
             const total = calculateTotal();
+
+            // Update tax label with current rate
+            const includeTax = document.getElementById('includeTax')?.checked ?? true;
+            let taxRate = 0;
+            
+            if (includeTax) {
+                const taxRateSelect = document.getElementById('taxRate');
+                if (taxRateSelect) {
+                    if (taxRateSelect.value === 'custom') {
+                        taxRate = Number(document.getElementById('customTaxRate')?.value) || 0;
+                    } else {
+                        taxRate = Number(taxRateSelect.value) || 10;
+                    }
+                }
+            }
+            
+            const taxLabel = document.getElementById('taxLabelDisplay');
+            if (taxLabel) {
+                taxLabel.textContent = `消費税（${taxRate}%）`;
+            }
 
             document.getElementById('subtotalDisplay').textContent = formatCurrency(subtotal);
             document.getElementById('taxDisplay').textContent = formatCurrency(tax);
