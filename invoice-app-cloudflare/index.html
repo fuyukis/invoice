@@ -1134,6 +1134,8 @@
 
                         ${subject ? `<div style="margin-bottom: 15px; font-size: 9px;"><p><strong>${labels.subject}:</strong> ${subject}</p></div>` : ''}
 
+                        ${document.getElementById('notes')?.value ? `<div style="margin-bottom: 15px; font-size: 8px; color: #555; background-color: #f9f9f9; padding: 8px; border-left: 3px solid #999;"><p style="white-space: pre-wrap;"><strong>備考:</strong> ${document.getElementById('notes').value}</p></div>` : ''}
+
                         <div style="margin-bottom: 15px; font-size: 9px;">
                             <p>${message}</p>
                         </div>
