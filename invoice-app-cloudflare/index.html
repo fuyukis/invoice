@@ -904,7 +904,13 @@
                     number: document.getElementById('docNumber').value,
                     date: document.getElementById('issueDate').value,
                     dueDate: document.getElementById('dueDate').value,
-                    subject: document.getElementById('subject').value
+                    subject: document.getElementById('subject').value,
+                    notes: document.getElementById('notes')?.value || ''
+                },
+                taxSettings: {
+                    includeTax: document.getElementById('includeTax')?.checked ?? true,
+                    taxRate: document.getElementById('taxRate')?.value || '10',
+                    customTaxRate: document.getElementById('customTaxRate')?.value || ''
                 },
                 items: items,
                 includePaypal: document.getElementById('includePaypal')?.checked || false,
@@ -1014,6 +1020,27 @@
             document.getElementById('issueDate').value = invoice.documentInfo.date;
             document.getElementById('dueDate').value = invoice.documentInfo.dueDate;
             document.getElementById('subject').value = invoice.documentInfo.subject;
+            
+            // Load notes
+            if (document.getElementById('notes')) {
+                document.getElementById('notes').value = invoice.documentInfo.notes || '';
+            }
+            
+            // Load tax settings
+            if (invoice.taxSettings) {
+                if (document.getElementById('includeTax')) {
+                    document.getElementById('includeTax').checked = invoice.taxSettings.includeTax ?? true;
+                }
+                if (document.getElementById('taxRate')) {
+                    document.getElementById('taxRate').value = invoice.taxSettings.taxRate || '10';
+                }
+                if (document.getElementById('customTaxRate') && invoice.taxSettings.customTaxRate) {
+                    document.getElementById('customTaxRate').value = invoice.taxSettings.customTaxRate;
+                    if (invoice.taxSettings.taxRate === 'custom') {
+                        document.getElementById('customTaxRate').style.display = 'block';
+                    }
+                }
+            }
 
             // Load PayPal option
             if (document.getElementById('includePaypal')) {
