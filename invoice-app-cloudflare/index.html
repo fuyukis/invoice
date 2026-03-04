@@ -13,6 +13,16 @@
                 box-shadow: none !important;
                 padding: 0 !important;
             }
+            
+            /* ヘッダー・フッターを消す */
+            @page {
+                margin: 0;
+                size: A4;
+            }
+            
+            body {
+                margin: 1.6cm;
+            }
         }
         
         .print-document {
@@ -1213,7 +1223,27 @@
         }
 
         function printDocument() {
+            // Set document title for PDF filename
+            const docTypeNames = {
+                'quote': 'quotation',
+                'invoice': 'invoice',
+                'delivery': 'delivery'
+            };
+            
+            const docNumber = document.getElementById('docNumber').value || 'draft';
+            const docType = docTypeNames[documentType] || 'document';
+            const filename = `${docType}_${docNumber}`;
+            
+            // Temporarily change page title for PDF filename
+            const originalTitle = document.title;
+            document.title = filename;
+            
             window.print();
+            
+            // Restore original title after print dialog
+            setTimeout(() => {
+                document.title = originalTitle;
+            }, 100);
         }
     </script>
 </body>
