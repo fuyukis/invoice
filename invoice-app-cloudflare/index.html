@@ -251,7 +251,7 @@
                         </button>
                     </div>
                     <input type="text" id="clientName" placeholder="宛先（会社名・氏名）" oninput="updatePreview()" class="w-full p-2 border rounded mb-2">
-                    <input type="text" id="clientPostal" placeholder="郵便番号" oninput="updatePreview()" class="w-full p-2 border rounded mb-2">
+                    <input type="text" id="clientPostal" placeholder="郵便番号（例：1550032）" oninput="updatePreview()" onchange="fetchAddress()" class="w-full p-2 border rounded mb-2">
                     <input type="text" id="clientAddress" placeholder="住所" oninput="updatePreview()" class="w-full p-2 border rounded">
                 </div>
 
@@ -722,6 +722,34 @@
             updatePreview();
         }
 
+        // Postal code to address auto-fill (Japan only)
+        async function fetchAddress() {
+            const postalCode = document.getElementById('clientPostal').value.replace(/[^0-9]/g, '');
+            
+            // Must be 7 digits
+            if (postalCode.length !== 7) {
+                return;
+            }
+            
+            try {
+                // Using zipcloud.ibsnet.co.jp API (free, no API key needed)
+                const response = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode}`);
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    const result = data.results[0];
+                    const address = `${result.address1}${result.address2}${result.address3}`;
+                    
+                    // Auto-fill address field
+                    document.getElementById('clientAddress').value = address;
+                    updatePreview();
+                }
+            } catch (error) {
+                console.log('郵便番号検索エラー:', error);
+                // Silently fail - user can enter address manually
+            }
+        }
+
         function updateLanguage(lang) {
             language = lang;
             const paypalOption = document.getElementById('paypalOption');
@@ -981,7 +1009,16 @@
 
             container.innerHTML = savedInvoices.map(invoice => {
                 const date = new Date(invoice.savedAt).toLocaleDateString('ja-JP');
-                const docType = invoice.documentType === 'invoice' ? '請求書' : '納品書';
+                
+                // Show correct document type
+                const docTypeMap = {
+                    'quote': '見積書',
+                    'invoice': '請求書',
+                    'delivery': '納品書',
+                    'receipt': '領収書'
+                };
+                const docType = docTypeMap[invoice.documentType] || '請求書';
+                
                 const clientName = invoice.clientInfo.name || '未設定';
                 const total = formatCurrency(
                     invoice.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) * 1.1
