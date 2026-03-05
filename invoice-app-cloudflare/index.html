@@ -825,10 +825,17 @@
         function updateItem(index, field, value) {
             if (field === 'unit') {
                 items[index][field] = value;
+                renderItems();
+            } else if (field === 'description') {
+                items[index][field] = value;
             } else {
-                items[index][field] = field === 'description' ? value : parseFloat(value) || 0;
+                items[index][field] = parseFloat(value) || 0;
+                // Only update the amount display without full re-render
+                const amountDisplay = document.querySelectorAll('.amount-display')[index];
+                if (amountDisplay) {
+                    amountDisplay.value = formatCurrency(items[index].quantity * items[index].unitPrice);
+                }
             }
-            renderItems();
             updatePreview();
         }
 
@@ -865,7 +872,7 @@
                             oninput="updateItem(${index}, 'unitPrice', this.value)" 
                             class="p-2 border rounded">
                         <input type="text" value="${formatCurrency(item.quantity * item.unitPrice)}" 
-                            readonly class="p-2 border rounded bg-gray-100">
+                            readonly class="p-2 border rounded bg-gray-100 amount-display">
                     </div>
                 </div>
             `).join('');
