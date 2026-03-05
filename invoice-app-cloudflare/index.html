@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>見積書・請求書・納品書作成アプリ</title>
+    <title>見積書・請求書・納品書・領収書作成アプリ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media print {
@@ -67,7 +67,7 @@
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-8 no-print">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">見積書・請求書・納品書作成</h1>
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">見積書・請求書・納品書・領収書作成</h1>
             <p class="text-gray-600">ビジネス文書を簡単に作成 + 取引先管理</p>
             <button onclick="newInvoice()" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2 mx-auto">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,6 +133,16 @@
                                 class="mr-2"
                             />
                             納品書
+                        </label>
+                        <label class="flex items-center">
+                            <input
+                                type="radio"
+                                value="receipt"
+                                onchange="updateDocType(this.value)"
+                                name="docType"
+                                class="mr-2"
+                            />
+                            領収書
                         </label>
                     </div>
                     <label class="block text-sm font-semibold mb-2 mt-4">言語</label>
@@ -628,9 +638,11 @@
                 quote: '見積書',
                 invoice: '請求書',
                 delivery: '納品書',
+                receipt: '領収書',
                 quoteNumber: '見積書番号',
                 invoiceNumber: '請求書番号',
                 deliveryNumber: '納品書番号',
+                receiptNumber: '領収書番号',
                 to: '宛先',
                 honorific: '御中',
                 issuer: '発行者',
@@ -653,9 +665,11 @@
                 quote: 'QUOTATION',
                 invoice: 'INVOICE',
                 delivery: 'DELIVERY NOTE',
+                receipt: 'RECEIPT',
                 quoteNumber: 'Quotation Number',
                 invoiceNumber: 'Invoice Number',
                 deliveryNumber: 'Delivery Number',
+                receiptNumber: 'Receipt Number',
                 to: 'Bill To',
                 honorific: '',
                 issuer: 'From',
@@ -780,7 +794,17 @@
         function updateDocType(type) {
             documentType = type;
             const dueDateContainer = document.getElementById('dueDateContainer');
-            dueDateContainer.style.display = type === 'invoice' ? 'block' : 'none';
+            const dueDateLabel = document.getElementById('dueDateLabel');
+            
+            if (type === 'delivery' || type === 'receipt') {
+                dueDateContainer.style.display = 'none';
+            } else if (type === 'quote') {
+                dueDateContainer.style.display = 'block';
+                if (dueDateLabel) dueDateLabel.textContent = '有効期限';
+            } else {
+                dueDateContainer.style.display = 'block';
+                if (dueDateLabel) dueDateLabel.textContent = '支払期限';
+            }
             updatePreview();
         }
 
@@ -799,7 +823,12 @@
         }
 
         function updateItem(index, field, value) {
-            items[index][field] = field === 'description' ? value : parseFloat(value) || 0;
+            if (field === 'unit') {
+                items[index][field] = value;
+            } else {
+                items[index][field] = field === 'description' ? value : parseFloat(value) || 0;
+            }
+            renderItems();
             updatePreview();
         }
 
@@ -1139,8 +1168,28 @@
             const includePaypal = document.getElementById('includePaypal')?.checked || false;
 
             const docTitle = labels[documentType];
-            const docNumberLabel = documentType === 'invoice' ? labels.invoiceNumber : labels.deliveryNumber;
-            const message = documentType === 'invoice' ? labels.message : labels.deliveryMessage;
+            
+            let docNumberLabel;
+            if (documentType === 'quote') {
+                docNumberLabel = labels.quoteNumber;
+            } else if (documentType === 'invoice') {
+                docNumberLabel = labels.invoiceNumber;
+            } else if (documentType === 'receipt') {
+                docNumberLabel = labels.receiptNumber;
+            } else {
+                docNumberLabel = labels.deliveryNumber;
+            }
+            
+            let message;
+            if (documentType === 'quote') {
+                message = language === 'ja' ? '下記の通りお見積り申し上げます。' : 'We are pleased to quote the following:';
+            } else if (documentType === 'invoice') {
+                message = labels.message;
+            } else if (documentType === 'receipt') {
+                message = language === 'ja' ? '下記の金額を領収いたしました。' : 'Received with thanks the following:';
+            } else {
+                message = labels.deliveryMessage;
+            }
 
             const preview = document.getElementById('invoicePreview');
             preview.innerHTML = `
@@ -1254,7 +1303,8 @@
             const docTypeNames = {
                 'quote': 'quotation',
                 'invoice': 'invoice',
-                'delivery': 'delivery'
+                'delivery': 'delivery',
+                'receipt': 'receipt'
             };
             
             const docNumber = document.getElementById('docNumber').value || 'draft';
