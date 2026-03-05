@@ -1199,6 +1199,60 @@
             }
 
             const preview = document.getElementById('invoicePreview');
+            
+            // Receipt has a different layout
+            if (documentType === 'receipt') {
+                const calculations = { subtotal: calculateSubtotal(), tax: calculateTax(), total: calculateTotal(), taxRate: 0 };
+                
+                preview.innerHTML = `
+                    <div style="max-width: 800px; margin: 0 auto; padding: 20px; border: 2px solid #000;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="font-size: 28px; margin: 0; letter-spacing: 8px;">領収書</h1>
+                        </div>
+
+                        <div style="margin-bottom: 30px;">
+                            <p style="font-size: 11px; margin-bottom: 10px;"><strong>${clientName}${language === 'ja' ? ' 様' : ''}</strong></p>
+                        </div>
+
+                        <div style="text-align: center; margin: 30px 0; padding: 20px; border: 3px double #000;">
+                            <p style="font-size: 12px; margin-bottom: 10px;">金額</p>
+                            <p style="font-size: 32px; margin: 0; font-weight: bold;">￥ ${calculations.total.toLocaleString()}</p>
+                        </div>
+
+                        <div style="margin: 30px 0;">
+                            <p style="font-size: 10px; margin-bottom: 5px;"><strong>但し、</strong></p>
+                            <p style="font-size: 10px; padding-left: 20px; border-bottom: 1px solid #000; padding-bottom: 5px;">
+                                ${subject || '上記金額'}${language === 'ja' ? 'として' : ' as payment for'}
+                            </p>
+                            ${document.getElementById('notes')?.value ? `
+                                <p style="font-size: 9px; margin-top: 10px; color: #666;">
+                                    ${document.getElementById('notes').value}
+                                </p>
+                            ` : ''}
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-top: 50px;">
+                            <div style="flex: 1;">
+                                ${calculations.total >= 50000 ? `
+                                    <div style="border: 1px solid #000; padding: 30px 20px; text-align: center; width: 120px;">
+                                        <p style="font-size: 8px; margin: 0;">収入印紙</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div style="flex: 1; text-align: right;">
+                                <p style="font-size: 10px; margin-bottom: 5px;">${labels.issueDate}: ${issueDate}</p>
+                                <p style="font-size: 10px; margin-bottom: 3px;"><strong>${companyInfo.name}</strong></p>
+                                <p style="font-size: 9px; margin-bottom: 2px;">${language === 'ja' ? '〒' : ''}${companyInfo.postalCode}</p>
+                                <p style="font-size: 9px; margin-bottom: 2px;">${companyInfo.address}</p>
+                                <p style="font-size: 8px; margin-top: 5px;">${labels.registrationNumber}: ${companyInfo.registrationNumber}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Standard layout for invoice/quote/delivery
             preview.innerHTML = `
                 <div style="max-width: 800px; margin: 0 auto;">
                     <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 8px;">
