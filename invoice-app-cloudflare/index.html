@@ -14,6 +14,10 @@
                 padding: 0 !important;
             }
             
+            .print-no-border {
+                border: none !important;
+            }
+            
             /* ヘッダー・フッターを消す */
             @page {
                 margin: 0;
@@ -102,6 +106,7 @@
                 <!-- Document Type -->
                 <div class="mb-6">
                     <label class="block text-sm font-semibold mb-2">文書種類</label>
+                    <p class="text-xs text-gray-600 mb-2">💡 入力中でも種類を変更できます（データは保持されます）</p>
                     <div class="flex gap-4 mb-3 flex-wrap">
                         <label class="flex items-center">
                             <input
@@ -251,7 +256,12 @@
                         </button>
                     </div>
                     <input type="text" id="clientName" placeholder="宛先（会社名・氏名）" oninput="updatePreview()" class="w-full p-2 border rounded mb-2">
-                    <input type="text" id="clientPostal" placeholder="郵便番号（例：1550032）" oninput="updatePreview()" onchange="fetchAddress()" class="w-full p-2 border rounded mb-2">
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="clientPostal" placeholder="郵便番号（例：1550032）" oninput="updatePreview()" onblur="fetchAddress()" class="flex-1 p-2 border rounded">
+                        <button onclick="fetchAddress()" type="button" class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm whitespace-nowrap">
+                            住所検索
+                        </button>
+                    </div>
                     <input type="text" id="clientAddress" placeholder="住所" oninput="updatePreview()" class="w-full p-2 border rounded">
                 </div>
 
@@ -318,6 +328,25 @@
                     </button>
                 </div>
 
+                <!-- Quick Conversion Buttons -->
+                <div class="mt-3 p-3 bg-blue-50 rounded">
+                    <p class="text-xs text-gray-600 mb-2">🔄 別の書類に変換:</p>
+                    <div class="flex gap-2 flex-wrap">
+                        <button onclick="convertDocType('quote')" class="text-xs px-3 py-1 bg-white border border-blue-300 rounded hover:bg-blue-100">
+                            見積書へ
+                        </button>
+                        <button onclick="convertDocType('invoice')" class="text-xs px-3 py-1 bg-white border border-blue-300 rounded hover:bg-blue-100">
+                            請求書へ
+                        </button>
+                        <button onclick="convertDocType('delivery')" class="text-xs px-3 py-1 bg-white border border-blue-300 rounded hover:bg-blue-100">
+                            納品書へ
+                        </button>
+                        <button onclick="convertDocType('receipt')" class="text-xs px-3 py-1 bg-white border border-blue-300 rounded hover:bg-blue-100">
+                            領収書へ
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Saved Invoices Section -->
                 <div class="mt-8 border-t pt-6">
                     <h3 class="font-semibold mb-3 flex items-center gap-2">
@@ -335,7 +364,7 @@
             <!-- Preview -->
             <div class="bg-white rounded-lg shadow-lg p-6" id="preview-section">
                 <h2 class="text-xl font-bold mb-4 no-print">プレビュー</h2>
-                <div id="invoicePreview" class="border p-8 bg-white print-document" style="min-height: 800px;">
+                <div id="invoicePreview" class="border p-8 bg-white print-document print-no-border" style="min-height: 800px;">
                     <!-- Preview content will be inserted here -->
                 </div>
             </div>
@@ -724,29 +753,69 @@
 
         // Postal code to address auto-fill (Japan only)
         async function fetchAddress() {
-            const postalCode = document.getElementById('clientPostal').value.replace(/[^0-9]/g, '');
+            const postalInput = document.getElementById('clientPostal');
+            const postalCode = postalInput.value.replace(/[^0-9]/g, '');
             
             // Must be 7 digits
             if (postalCode.length !== 7) {
+                if (postalInput.value.length > 0) {
+                    alert('郵便番号は7桁で入力してください（例：1550032）');
+                }
                 return;
             }
             
             try {
-                // Using zipcloud.ibsnet.co.jp API (free, no API key needed)
-                const response = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode}`);
+                // Using postcode-jp API (CORS enabled)
+                const response = await fetch(`https://postcode.teraren.com/postcodes/${postalCode}.json`);
+                
+                if (!response.ok) {
+                    throw new Error('Address not found');
+                }
+                
                 const data = await response.json();
                 
-                if (data.results && data.results.length > 0) {
-                    const result = data.results[0];
-                    const address = `${result.address1}${result.address2}${result.address3}`;
+                if (data && data.length > 0) {
+                    const result = data[0];
+                    const address = `${result.prefecture}${result.city}${result.suburb}`;
                     
                     // Auto-fill address field
-                    document.getElementById('clientAddress').value = address;
+                    const addressInput = document.getElementById('clientAddress');
+                    addressInput.value = address;
                     updatePreview();
+                    
+                    // Visual feedback
+                    addressInput.style.backgroundColor = '#d4edda';
+                    setTimeout(() => {
+                        addressInput.style.backgroundColor = '';
+                    }, 1000);
+                } else {
+                    alert('該当する住所が見つかりませんでした。郵便番号をご確認ください。');
                 }
             } catch (error) {
-                console.log('郵便番号検索エラー:', error);
-                // Silently fail - user can enter address manually
+                console.error('郵便番号検索エラー:', error);
+                
+                // Fallback: Try another API
+                try {
+                    const response2 = await fetch(`https://api.zipaddress.net/?zipcode=${postalCode}`);
+                    const data2 = await response2.json();
+                    
+                    if (data2.code === 200 && data2.data) {
+                        const address = `${data2.data.pref}${data2.data.city}${data2.data.town}`;
+                        const addressInput = document.getElementById('clientAddress');
+                        addressInput.value = address;
+                        updatePreview();
+                        
+                        addressInput.style.backgroundColor = '#d4edda';
+                        setTimeout(() => {
+                            addressInput.style.backgroundColor = '';
+                        }, 1000);
+                    } else {
+                        alert('該当する住所が見つかりませんでした。手動で入力してください。');
+                    }
+                } catch (error2) {
+                    console.error('フォールバックAPIもエラー:', error2);
+                    alert('住所検索に失敗しました。インターネット接続を確認するか、手動で入力してください。');
+                }
             }
         }
 
@@ -834,6 +903,36 @@
                 if (dueDateLabel) dueDateLabel.textContent = '支払期限';
             }
             updatePreview();
+        }
+
+        function convertDocType(newType) {
+            const typeNames = {
+                'quote': '見積書',
+                'invoice': '請求書',
+                'delivery': '納品書',
+                'receipt': '領収書'
+            };
+            
+            const currentTypeName = typeNames[documentType];
+            const newTypeName = typeNames[newType];
+            
+            if (documentType === newType) {
+                alert(`既に${newTypeName}です。`);
+                return;
+            }
+            
+            if (confirm(`現在の${currentTypeName}を${newTypeName}に変換しますか？\n\n入力済みのデータはそのまま保持されます。`)) {
+                // Update radio button
+                document.querySelector(`input[name="docType"][value="${newType}"]`).checked = true;
+                
+                // Update document type
+                updateDocType(newType);
+                
+                // Clear current invoice ID so it saves as new document
+                currentInvoiceId = null;
+                
+                alert(`${newTypeName}に変換しました！\n\n「保存」ボタンで新しい${newTypeName}として保存できます。`);
+            }
         }
 
         function addItem() {
@@ -1337,7 +1436,7 @@
                                 ${items.map(item => `
                                     <tr>
                                         <td style="padding: 5px;">${item.description || (language === 'ja' ? '（未入力）' : '(Not specified)')}</td>
-                                        <td style="text-align: right; padding: 5px;">${item.quantity}</td>
+                                        <td style="text-align: right; padding: 5px;">${item.quantity}${item.unit || '個'}</td>
                                         <td style="text-align: right; padding: 5px;">${formatCurrency(item.unitPrice)}</td>
                                         <td style="text-align: right; padding: 5px;">${formatCurrency(item.quantity * item.unitPrice)}</td>
                                     </tr>
