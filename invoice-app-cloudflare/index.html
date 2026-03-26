@@ -90,11 +90,10 @@
                 id="passwordInput" 
                 placeholder="パスワード"
                 class="w-full p-3 border rounded-lg mb-4 text-center text-lg"
-                onkeypress="if(event.key==='Enter') checkPassword()"
                 autofocus
             >
             <button 
-                onclick="checkPassword()" 
+                id="passwordLoginBtn"
                 class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold">
                 ログイン
             </button>
@@ -503,7 +502,22 @@
                 overlay.style.display = 'none';
             } else {
                 overlay.style.display = 'flex';
-                document.getElementById('passwordInput').focus();
+                const passwordInput = document.getElementById('passwordInput');
+                const loginBtn = document.getElementById('passwordLoginBtn');
+                
+                // Add event listeners
+                if (passwordInput) {
+                    passwordInput.focus();
+                    passwordInput.addEventListener('keypress', function(event) {
+                        if (event.key === 'Enter') {
+                            checkPassword();
+                        }
+                    });
+                }
+                
+                if (loginBtn) {
+                    loginBtn.addEventListener('click', checkPassword);
+                }
             }
         });
         
@@ -1375,6 +1389,7 @@
                         taxRate = Number(taxRateSelect.value) || 10;
                     }
                 }
+            }
             
             const taxLabel = document.getElementById('taxLabelDisplay');
             if (taxLabel) {
