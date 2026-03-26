@@ -76,7 +76,7 @@
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
     <!-- Password Protection Overlay -->
-    <div id="passwordOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-50 flex items-center justify-center" style="z-index: 9999;">
+    <div id="passwordOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-98 flex items-center justify-center" style="z-index: 9999;">
         <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
             <div class="text-center mb-6">
                 <svg class="w-16 h-16 mx-auto mb-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -494,6 +494,10 @@
         window.addEventListener('DOMContentLoaded', function() {
             const isAuthenticated = sessionStorage.getItem('invoiceAppAuth');
             const overlay = document.getElementById('passwordOverlay');
+            
+            // TEMPORARY: Always allow access for testing
+            overlay.style.display = 'none';
+            return;
             
             if (isAuthenticated === 'true') {
                 overlay.style.display = 'none';
