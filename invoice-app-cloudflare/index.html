@@ -102,6 +102,7 @@
                 パスワードが正しくありません
             </p>
             <div class="mt-6 pt-6 border-t text-center">
+                <p class="text-xs text-gray-500">💡 初期パスワード: <code class="bg-gray-100 px-2 py-1 rounded">invoice2025</code></p>
                 <p class="text-xs text-gray-500 mt-2">パスワードを変更するにはHTMLファイルを編集してください</p>
             </div>
         </div>
@@ -504,7 +505,7 @@
         
         // ============ MAIN APPLICATION ============
         
-        let items = [{description: '', quantity: 1, unit: '個', unitPrice: 0}];
+        let items = [{description: '', quantity: 1, unit: '個', unitPrice: 0, taxType: '10'}];
         let documentType = 'invoice';
         let currentInvoiceId = null;
         let language = 'ja';
@@ -1019,7 +1020,7 @@
         }
 
         function addItem() {
-            items.push({description: '', quantity: 1, unit: '個', unitPrice: 0});
+            items.push({description: '', quantity: 1, unit: '個', unitPrice: 0, taxType: '10'});
             renderItems();
             updatePreview();
         }
@@ -1033,7 +1034,7 @@
         }
 
         function updateItem(index, field, value) {
-            if (field === 'unit') {
+            if (field === 'unit' || field === 'taxType') {
                 items[index][field] = value;
                 renderItems();
             } else if (field === 'description') {
@@ -1063,7 +1064,7 @@
                     <input type="text" placeholder="品目・サービス名" value="${item.description}" 
                         oninput="updateItem(${index}, 'description', this.value)" 
                         class="w-full p-2 border rounded mb-2">
-                    <div class="grid grid-cols-4 gap-2">
+                    <div class="grid grid-cols-5 gap-2 mb-2">
                         <input type="number" placeholder="数量" value="${item.quantity}" 
                             oninput="updateItem(${index}, 'quantity', this.value)" 
                             class="p-2 border rounded">
@@ -1081,6 +1082,11 @@
                         <input type="number" placeholder="単価" value="${item.unitPrice}" 
                             oninput="updateItem(${index}, 'unitPrice', this.value)" 
                             class="p-2 border rounded">
+                        <select onchange="updateItem(${index}, 'taxType', this.value)" class="p-2 border rounded text-sm" title="税区分">
+                            <option value="10" ${(item.taxType || '10') === '10' ? 'selected' : ''}>課税10%</option>
+                            <option value="8" ${item.taxType === '8' ? 'selected' : ''}>軽減8%</option>
+                            <option value="0" ${item.taxType === '0' ? 'selected' : ''}>非課税</option>
+                        </select>
                         <input type="text" value="${formatCurrency(item.quantity * item.unitPrice)}" 
                             readonly class="p-2 border rounded bg-gray-100 amount-display">
                     </div>
@@ -1099,19 +1105,16 @@
                 return 0;
             }
             
-            const taxRateSelect = document.getElementById('taxRate');
-            let taxRate = 10;
+            // Calculate tax per item based on taxType
+            let totalTax = 0;
             
-            if (taxRateSelect) {
-                if (taxRateSelect.value === 'custom') {
-                    taxRate = Number(document.getElementById('customTaxRate')?.value) || 0;
-                } else {
-                    taxRate = Number(taxRateSelect.value) || 10;
-                }
-            }
+            items.forEach(item => {
+                const itemTotal = (item.quantity || 0) * (item.unitPrice || 0);
+                const taxRate = parseFloat(item.taxType || '10');
+                totalTax += itemTotal * (taxRate / 100);
+            });
             
-            const subtotal = calculateSubtotal();
-            return Math.floor(subtotal * (taxRate / 100));
+            return Math.floor(totalTax);
         }
 
         function calculateTotal() {
@@ -1368,11 +1371,16 @@
                         taxRate = Number(taxRateSelect.value) || 10;
                     }
                 }
-            }
             
             const taxLabel = document.getElementById('taxLabelDisplay');
             if (taxLabel) {
-                taxLabel.textContent = `消費税（${taxRate}%）`;
+                // Check if there are mixed tax rates
+                const taxTypes = [...new Set(items.map(item => item.taxType || '10'))];
+                if (taxTypes.length > 1) {
+                    taxLabel.textContent = '消費税（内訳あり）';
+                } else {
+                    taxLabel.textContent = `消費税（${taxTypes[0]}%）`;
+                }
             }
 
             document.getElementById('subtotalDisplay').textContent = formatCurrency(subtotal);
