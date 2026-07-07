@@ -1243,6 +1243,10 @@
                                 class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
                                 読込
                             </button>
+                            <button onclick="copyInvoice('${invoice.id}')" 
+                                class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
+                                コピー
+                            </button>
                             <button onclick="deleteInvoice('${invoice.id}')" 
                                 class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
                                 削除
@@ -1335,6 +1339,85 @@
         }
 
         // Delete invoice
+        // Copy invoice
+        function copyInvoice(id) {
+            const savedInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+            const invoice = savedInvoices.find(inv => inv.id === id);
+            
+            if (!invoice) {
+                alert('文書が見つかりません');
+                return;
+            }
+            
+            // Create a deep copy
+            const copiedInvoice = JSON.parse(JSON.stringify(invoice));
+            
+            // Reset for new document
+            copiedInvoice.id = Date.now().toString();
+            copiedInvoice.documentInfo.number = ''; // Clear document number
+            copiedInvoice.documentInfo.date = new Date().toISOString().split('T')[0]; // Today's date
+            copiedInvoice.savedAt = new Date().toISOString();
+            
+            // Load the copied invoice
+            documentType = copiedInvoice.documentType || 'invoice';
+            language = copiedInvoice.language || 'ja';
+            currency = copiedInvoice.currency || 'JPY';
+            exchangeRate = copiedInvoice.exchangeRate || 1;
+            exchangeRateDate = copiedInvoice.exchangeRateDate || '';
+            
+            // Load client info
+            document.getElementById('clientName').value = copiedInvoice.clientInfo.name;
+            document.getElementById('clientPostal').value = copiedInvoice.clientInfo.postalCode;
+            document.getElementById('clientAddress').value = copiedInvoice.clientInfo.address;
+            
+            // Load document info
+            document.getElementById('docNumber').value = '';
+            document.getElementById('issueDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('dueDate').value = copiedInvoice.documentInfo.dueDate;
+            document.getElementById('subject').value = copiedInvoice.documentInfo.subject;
+            
+            if (document.getElementById('notes')) {
+                document.getElementById('notes').value = copiedInvoice.documentInfo.notes || '';
+            }
+            
+            // Load tax settings
+            if (copiedInvoice.taxSettings) {
+                if (document.getElementById('includeTax')) {
+                    document.getElementById('includeTax').checked = copiedInvoice.taxSettings.includeTax ?? true;
+                }
+                if (document.getElementById('taxRate')) {
+                    document.getElementById('taxRate').value = copiedInvoice.taxSettings.taxRate || '10';
+                }
+                if (document.getElementById('customTaxRate') && copiedInvoice.taxSettings.customTaxRate) {
+                    document.getElementById('customTaxRate').value = copiedInvoice.taxSettings.customTaxRate;
+                }
+            }
+            
+            // Load items
+            items = copiedInvoice.items.map(item => ({
+                description: item.description,
+                quantity: item.quantity,
+                unit: item.unit || '個',
+                unitPrice: item.unitPrice,
+                taxType: item.taxType || '10'
+            }));
+            
+            // Update radio buttons
+            document.querySelector(`input[name="docType"][value="${documentType}"]`).checked = true;
+            document.querySelector(`input[name="language"][value="${language}"]`).checked = true;
+            document.getElementById('currency').value = currency;
+            
+            // Clear current invoice ID so it saves as new
+            currentInvoiceId = null;
+            
+            // Update display
+            renderItems();
+            updatePreview();
+            loadSavedInvoices();
+            
+            alert('コピーしました！新規の文書として保存できます。');
+        }
+
         function deleteInvoice(id) {
             if (!confirm('この文書を削除してもよろしいですか？')) {
                 return;
