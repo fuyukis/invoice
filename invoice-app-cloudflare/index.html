@@ -457,12 +457,12 @@
                 accountName: 'ド）スノーアイランドナイン'
             },
             en: {
-                bankName: 'SBI Sumishin Net Bank, Ltd.',
-                branchName: 'Ichigo Branch (No.101)',
-                swiftCode: 'NTSSJPJT',
-                accountType: 'Savings',
-                accountNumber: '6465955',
-                accountName: 'Fuyuki Shimazu',
+                bankName: 'Wise Payments Limited',
+                bankAddress: '65 Clifton Street, London, EC2A 4JE, United Kingdom',
+                accountName: 'FUYUKI SHIMAZU',
+                iban: 'GB90 TRWI 6084 6490 9486 50',
+                swiftCode: 'TRWIGB2LXXX',
+                note: 'If you have a Wise account, payment link will be sent via email',
                 paypalEmail: '@cartonstudio9'
             }
         };
@@ -1560,12 +1560,12 @@
                                     <p style="margin: 2px 0; font-size: 9px;">${bankInfo.accountType} ${bankInfo.accountNumber}</p>
                                     <p style="margin: 2px 0; font-size: 9px;">${bankInfo.accountName}</p>
                                 ` : `
-                                    <p style="margin: 2px 0; font-size: 9px;"><strong>Bank Name:</strong> ${bankInfo.bankName}</p>
-                                    <p style="margin: 2px 0; font-size: 9px;"><strong>Branch:</strong> ${bankInfo.branchName}</p>
-                                    <p style="margin: 2px 0; font-size: 9px;"><strong>SWIFT Code:</strong> ${bankInfo.swiftCode}</p>
-                                    <p style="margin: 2px 0; font-size: 9px;"><strong>Account Type:</strong> ${bankInfo.accountType}</p>
-                                    <p style="margin: 2px 0; font-size: 9px;"><strong>Account Number:</strong> ${bankInfo.accountNumber}</p>
-                                    <p style="margin: 2px 0; font-size: 9px;"><strong>Account Name:</strong> ${bankInfo.accountName}</p>
+                                    <p style="margin: 2px 0; font-size: 9px;"><strong>${bankInfo.bankName}</strong></p>
+                                    <p style="margin: 2px 0; font-size: 9px;">${bankInfo.bankAddress}</p>
+                                    <p style="margin: 8px 0 2px 0; font-size: 9px;"><strong>Account Name:</strong> ${bankInfo.accountName}</p>
+                                    <p style="margin: 2px 0; font-size: 9px;"><strong>IBAN:</strong> ${bankInfo.iban}</p>
+                                    <p style="margin: 2px 0; font-size: 9px;"><strong>SWIFT/BIC:</strong> ${bankInfo.swiftCode}</p>
+                                    <p style="margin: 8px 0 2px 0; font-size: 8px; color: #666; font-style: italic;">${bankInfo.note}</p>
                                     ${includePaypal ? `
                                         <p style="margin: 8px 0 2px 0; font-size: 9px;"><strong>Alternative Payment:</strong></p>
                                         <p style="margin: 2px 0; font-size: 9px;">PayPal: ${bankInfo.paypalEmail}</p>
