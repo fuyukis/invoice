@@ -246,6 +246,18 @@
                             <span class="text-sm">PayPal情報を追加</span>
                         </label>
                     </div>
+                    <div class="mt-4" id="wiseOption" style="display: none;">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="includeWise" onchange="updatePreview()" class="mr-2">
+                            <span class="text-sm">Wise (JPY) 情報を追加</span>
+                        </label>
+                    </div>
+                    <div class="mt-4" id="altAccountOption" style="display: none;">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="includeAltAccount" onchange="updatePreview()" class="mr-2">
+                            <span class="text-sm">国際銀行振込情報を追加</span>
+                        </label>
+                    </div>
                 </div>
 
                 <!-- Client Info with Selection -->
@@ -464,6 +476,20 @@
                 swiftCode: 'TRWIGB2LXXX',
                 note: 'JPY Account - SWIFT Transfer',
                 paypalEmail: '@cartonstudio9'
+            }
+        };
+
+        const ALT_ACCOUNT_INFO = {
+            en: {
+                currency: 'JPY',
+                beneficiaryBank: 'DOCOMO SMTB NET BANK, INC.',
+                beneficiarySWIFT: 'NTSSJPJT',
+                branch: 'Ichigo Branch',
+                branchCode: '101',
+                accountNumber: '6465955',
+                beneficiaryName: 'FUYUKI SHIMAZU',
+                intermediaryBank: 'MIZUHO BANK, LTD. Head Office',
+                intermediarySWIFT: 'MHCBJPJT'
             }
         };
 
@@ -826,8 +852,12 @@
             language = lang;
             const paypalOption = document.getElementById('paypalOption');
             const currencySection = document.getElementById('currencySection');
+            const wiseOption = document.getElementById('wiseOption');
+            const altAccountOption = document.getElementById('altAccountOption');
             
             paypalOption.style.display = lang === 'en' ? 'block' : 'none';
+            wiseOption.style.display = lang === 'en' ? 'block' : 'none';
+            altAccountOption.style.display = lang === 'en' ? 'block' : 'none';
             currencySection.style.display = lang === 'en' ? 'block' : 'none';
             
             if (lang === 'ja') {
@@ -1082,6 +1112,8 @@
                 },
                 items: items,
                 includePaypal: document.getElementById('includePaypal')?.checked || false,
+                includeWise: document.getElementById('includeWise')?.checked || false,
+                includeAltAccount: document.getElementById('includeAltAccount')?.checked || false,
                 savedAt: new Date().toISOString()
             };
 
@@ -1226,6 +1258,16 @@
             // Load PayPal option
             if (document.getElementById('includePaypal')) {
                 document.getElementById('includePaypal').checked = invoice.includePaypal || false;
+            }
+
+            // Load Wise option
+            if (document.getElementById('includeWise')) {
+                document.getElementById('includeWise').checked = invoice.includeWise || false;
+            }
+
+            // Load Alternative account option
+            if (document.getElementById('includeAltAccount')) {
+                document.getElementById('includeAltAccount').checked = invoice.includeAltAccount || false;
             }
 
             // Load items
@@ -1392,6 +1434,8 @@
             const companyInfo = COMPANY_INFO[language];
             const bankInfo = BANK_INFO[language];
             const includePaypal = document.getElementById('includePaypal')?.checked || false;
+            const includeWise = document.getElementById('includeWise')?.checked || false;
+            const includeAltAccount = document.getElementById('includeAltAccount')?.checked || false;
 
             const docTitle = labels[documentType];
             
@@ -1554,22 +1598,36 @@
                                     </p>
                                 ` : ''}
                                 <h3 style="font-size: 9px; margin-bottom: 6px; border-bottom: 1px solid #ccc; padding-bottom: 3px;">${labels.bankInfo}</h3>
-                                ${language === 'ja' ? `
+                                ${language === 'en' ? `
+                                    ${!includePaypal && !includeWise && !includeAltAccount ? `
+                                        <p style="margin: 2px 0; font-size: 9px; color: #666;">Please select a payment method above</p>
+                                    ` : ''}
+                                    ${includePaypal === true ? `
+                                        <p style="margin: 2px 0; font-size: 9px;"><strong>Payment Method: PayPal</strong></p>
+                                        <p style="margin: 2px 0; font-size: 9px;">${bankInfo.paypalEmail}</p>
+                                    ` : ''}
+                                    ${includeWise === true ? `
+                                        <p style="margin: 8px 0 2px 0; font-size: 9px;"><strong>Wise Account (JPY)</strong></p>
+                                        <p style="margin: 2px 0; font-size: 9px;"><strong>Bank:</strong> ${bankInfo.bankName}</p>
+                                        <p style="margin: 2px 0; font-size: 9px;"><strong>Address:</strong> ${bankInfo.bankAddress}</p>
+                                        <p style="margin: 2px 0; font-size: 9px;"><strong>Account Name:</strong> ${bankInfo.accountName}</p>
+                                        <p style="margin: 2px 0; font-size: 9px;"><strong>IBAN:</strong> ${bankInfo.iban}</p>
+                                        <p style="margin: 2px 0; font-size: 9px;"><strong>SWIFT/BIC:</strong> ${bankInfo.swiftCode}</p>
+                                    ` : ''}
+                                    ${includeAltAccount === true ? `
+                                        <p style="margin: 8px 0 2px 0; font-size: 9px;"><strong>International Bank Transfer (JPY)</strong></p>
+                                        <p style="margin: 2px 0; font-size: 8px;"><strong>Beneficiary Bank:</strong> ${ALT_ACCOUNT_INFO.en.beneficiaryBank}</p>
+                                        <p style="margin: 2px 0; font-size: 8px;"><strong>SWIFT:</strong> ${ALT_ACCOUNT_INFO.en.beneficiarySWIFT}</p>
+                                        <p style="margin: 2px 0; font-size: 8px;"><strong>Branch:</strong> ${ALT_ACCOUNT_INFO.en.branch} (${ALT_ACCOUNT_INFO.en.branchCode})</p>
+                                        <p style="margin: 2px 0; font-size: 8px;"><strong>Account Number:</strong> ${ALT_ACCOUNT_INFO.en.accountNumber}</p>
+                                        <p style="margin: 2px 0; font-size: 8px;"><strong>Beneficiary Name:</strong> ${ALT_ACCOUNT_INFO.en.beneficiaryName}</p>
+                                        <p style="margin: 2px 0; font-size: 8px;"><strong>Intermediary Bank:</strong> ${ALT_ACCOUNT_INFO.en.intermediaryBank} (${ALT_ACCOUNT_INFO.en.intermediarySWIFT})</p>
+                                    ` : ''}
+                                ` : `
                                     <p style="margin: 2px 0; font-size: 9px;"><strong>${bankInfo.bankName}</strong></p>
                                     <p style="margin: 2px 0; font-size: 9px;">${bankInfo.branchName}</p>
                                     <p style="margin: 2px 0; font-size: 9px;">${bankInfo.accountType} ${bankInfo.accountNumber}</p>
                                     <p style="margin: 2px 0; font-size: 9px;">${bankInfo.accountName}</p>
-                                ` : `
-                                    <p style="margin: 2px 0; font-size: 9px;"><strong>${bankInfo.bankName}</strong></p>
-                                    <p style="margin: 2px 0; font-size: 9px;">${bankInfo.bankAddress}</p>
-                                    <p style="margin: 8px 0 2px 0; font-size: 9px;"><strong>Account Name:</strong> ${bankInfo.accountName}</p>
-                                    <p style="margin: 2px 0; font-size: 9px;"><strong>IBAN:</strong> ${bankInfo.iban}</p>
-                                    <p style="margin: 2px 0; font-size: 9px;"><strong>SWIFT/BIC:</strong> ${bankInfo.swiftCode}</p>
-                                    <p style="margin: 8px 0 2px 0; font-size: 8px; color: #666; font-style: italic;">${bankInfo.note}</p>
-                                    ${includePaypal ? `
-                                        <p style="margin: 8px 0 2px 0; font-size: 9px;"><strong>Alternative Payment:</strong></p>
-                                        <p style="margin: 2px 0; font-size: 9px;">PayPal: ${bankInfo.paypalEmail}</p>
-                                    ` : ''}
                                 `}
                             </div>
                         ` : ''}
