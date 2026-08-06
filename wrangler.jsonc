@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "invoice2",
+  "compatibility_date": "2026-07-14",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "invoice-app-cloudflare"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
