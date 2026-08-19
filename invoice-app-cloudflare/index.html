@@ -175,6 +175,22 @@
                             English（海外）
                         </label>
                     </div>
+                    
+                    <!-- Issuer Selection -->
+                    <div id="issuerSection">
+                        <label class="block text-sm font-semibold mb-2 mt-4">発行元 (Issuer)</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="issuer" value="corporate" checked onchange="updateIssuer()" class="mr-2">
+                                <span class="text-sm">法人 / Corporate</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="issuer" value="personal" onchange="updateIssuer()" class="mr-2">
+                                <span class="text-sm">個人 / Personal</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <div id="currencySection" style="display: none;">
                         <label class="block text-sm font-semibold mb-2 mt-4">通貨 (Currency)</label>
                         <select id="currencySelect" onchange="updateCurrency()" class="w-full p-2 border rounded mb-2">
@@ -440,6 +456,7 @@
         let documentType = 'invoice';
         let currentInvoiceId = null;
         let language = 'ja';
+        let issuer = 'corporate';  // 'corporate' or 'personal'
         let currency = 'JPY';
         let exchangeRate = 1;
         let exchangeRateDate = '';
@@ -447,16 +464,30 @@
         // Fixed company information
         const COMPANY_INFO = {
             ja: {
-                name: '合同会社Snowisland9',
-                postalCode: '155-0032',
-                address: '東京都世田谷区代沢1-5-9',
-                registrationNumber: 'T9010903006381'
+                personal: {
+                    name: 'Fuyuki Shimazu',
+                    postalCode: '155-0032',
+                    address: '東京都世田谷区代沢1-5-9'
+                },
+                corporate: {
+                    name: '合同会社Snowisland9',
+                    postalCode: '155-0032',
+                    address: '東京都世田谷区代沢1-5-9',
+                    registrationNumber: 'T9010903006381'
+                }
             },
             en: {
-                name: 'Snowisland9 LLC',
-                postalCode: '155-0032',
-                address: '1-5-9 Daizawa, Setagaya-ku, Tokyo, Japan',
-                registrationNumber: 'T9010903006381'
+                personal: {
+                    name: 'Fuyuki Shimazu',
+                    postalCode: '155-0032',
+                    address: '1-5-9 Daizawa, Setagaya-ku, Tokyo, Japan'
+                },
+                corporate: {
+                    name: 'Snowisland9 LLC',
+                    postalCode: '155-0032',
+                    address: '1-5-9 Daizawa, Setagaya-ku, Tokyo, Japan',
+                    registrationNumber: 'T9010903006381'
+                }
             }
         };
 
@@ -848,6 +879,11 @@
             }
         }
 
+        function updateIssuer() {
+            issuer = document.querySelector('input[name="issuer"]:checked').value;
+            updatePreview();
+        }
+
         function updateLanguage(lang) {
             language = lang;
             const paypalOption = document.getElementById('paypalOption');
@@ -1090,6 +1126,7 @@
                 id: currentInvoiceId || Date.now().toString(),
                 documentType: documentType,
                 language: language,
+                issuer: issuer,
                 currency: currency,
                 exchangeRate: exchangeRate,
                 exchangeRateDate: exchangeRateDate,
@@ -1210,6 +1247,10 @@
             document.querySelector(`input[name="language"][value="${language}"]`).checked = true;
             updateLanguage(language);
 
+            // Load issuer
+            issuer = invoice.issuer || 'corporate';
+            document.querySelector(`input[name="issuer"][value="${issuer}"]`).checked = true;
+
             // Load currency settings
             currency = invoice.currency || 'JPY';
             exchangeRate = invoice.exchangeRate || 1;
@@ -1304,6 +1345,7 @@
                 
                 // Load the copied data
                 documentType = copiedInvoice.documentType || 'invoice';
+                issuer = copiedInvoice.issuer || 'corporate';
                 
                 // Load into form
                 document.getElementById('clientName').value = copiedInvoice.clientInfo.name || '';
@@ -1331,6 +1373,12 @@
                 const docTypeRadio = document.querySelector(`input[name="docType"][value="${documentType}"]`);
                 if (docTypeRadio) {
                     docTypeRadio.checked = true;
+                }
+                
+                // Update issuer radio button
+                const issuerRadio = document.querySelector(`input[name="issuer"][value="${issuer}"]`);
+                if (issuerRadio) {
+                    issuerRadio.checked = true;
                 }
                 
                 // Clear ID for new save
@@ -1431,7 +1479,7 @@
             const subject = document.getElementById('subject').value;
 
             const labels = LABELS[language];
-            const companyInfo = COMPANY_INFO[language];
+            const companyInfo = COMPANY_INFO[language][issuer];
             const bankInfo = BANK_INFO[language];
             const includePaypal = document.getElementById('includePaypal')?.checked || false;
             const includeWise = document.getElementById('includeWise')?.checked || false;
@@ -1507,7 +1555,7 @@
                                 <p style="font-size: 10px; margin-bottom: 3px;"><strong>${companyInfo.name}</strong></p>
                                 <p style="font-size: 9px; margin-bottom: 2px;">${language === 'ja' ? '〒' : ''}${companyInfo.postalCode}</p>
                                 <p style="font-size: 9px; margin-bottom: 2px;">${companyInfo.address}</p>
-                                <p style="font-size: 8px; margin-top: 5px;">${labels.registrationNumber}: ${companyInfo.registrationNumber}</p>
+                                ${companyInfo.registrationNumber ? `<p style="font-size: 8px; margin-top: 5px;">${labels.registrationNumber}: ${companyInfo.registrationNumber}</p>` : ''}
                             </div>
                         </div>
                     </div>
@@ -1538,7 +1586,7 @@
                                 <p style="margin: 2px 0; font-size: 9px;"><strong>${companyInfo.name}</strong></p>
                                 <p style="margin: 2px 0; font-size: 9px;">${language === 'ja' ? '〒' : ''}${companyInfo.postalCode}</p>
                                 <p style="margin: 2px 0; font-size: 9px;">${companyInfo.address}</p>
-                                <p style="margin: 2px 0; font-size: 9px; margin-top: 5px;">${labels.registrationNumber}: ${companyInfo.registrationNumber}</p>
+                                ${companyInfo.registrationNumber ? `<p style="margin: 2px 0; font-size: 9px; margin-top: 5px;">${labels.registrationNumber}: ${companyInfo.registrationNumber}</p>` : ''}
                             </div>
                         </div>
 
